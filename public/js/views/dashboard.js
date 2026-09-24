@@ -1,18 +1,22 @@
-import { categoryRows, legendRows, donutArcs, daysLeft, transactionsOfMonth } from '../calc.js';
-import { esc, money, currencySymbol, monthLabel, dateLabel, signedMoney } from '../format.js';
+import { categoryRows, legendRows, donutArcs, daysLeft, transactionsOfMonth, forecastMonth, addMonths } from '../calc.js';
+import { esc, money, moneyWithSymbol, currencySymbol, monthLabel, monthName, dateLabel, signedMoney } from '../format.js';
 import { icons } from '../icons.js';
 import { pageHead, categoryIcon, categoryMap, displayCategory } from './shared.js';
+import { forecastCard, trendCard } from './insights.js';
 
 const RECENT_LIMIT = 6;
 
 export function renderDashboard({ doc, month, currentMonth, summary, today }) {
   const cur = doc.settings.currency;
+  const prognosis = forecastMonth(doc, month, today);
   return `
     <div class="page">
       ${pageHead({ eyebrow: monthLabel(month), title: 'Dein', accent: 'Budget', month, currentMonth, actions: true })}
-      <div class="dash">
+      <div class="dash ${prognosis ? 'has-forecast' : ''}">
         ${hero(doc, summary, month, today, cur)}
         ${donut(doc, summary, cur)}
+        ${prognosis ? forecastCard(prognosis, cur) : ''}
+        ${trendCard(doc, month, cur)}
         ${recent(doc, month, cur)}
         ${categories(doc, summary, cur)}
       </div>
@@ -30,6 +34,12 @@ function hero(doc, summary, month, today, cur) {
   const perDay =
     month === current && left > 0 && summary.available > 0
       ? `<div class="hero-sub">≈ ${currencySymbol(cur)} ${money(summary.available / left, cur)} pro Tag bis Monatsende</div>`
+      : '';
+
+  // Übertrag aus dem Vormonat (Kontostand am Monatsanfang)
+  const carry =
+    summary.carryIn !== 0
+      ? `<div class="hero-sub">inkl. Übertrag aus ${esc(monthName(addMonths(month, -1)))}: ${summary.carryIn < 0 ? '−' : '+'}${moneyWithSymbol(summary.carryIn, cur)}</div>`
       : '';
 
   let hint = '';
@@ -52,6 +62,7 @@ function hero(doc, summary, month, today, cur) {
           <span class="hero-currency">${currencySymbol(cur)}</span>
           <span class="hero-value">${summary.negative ? '−' : ''}${money(summary.available, cur)}</span>
         </div>
+        ${carry}
         ${perDay}
       </div>
       ${hint}

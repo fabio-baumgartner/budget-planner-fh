@@ -78,6 +78,39 @@ export function transactionsOfMonth(doc, month) {
     .sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? 1 : -1));
 }
 
+// Einnahmen und Ausgaben je Monat: { '2026-09': { income, expenses, variable } }.
+// variable = Ausgaben ohne automatische Buchungen (für die Prognose).
+export function monthlyTotals(doc) {
+  const totals = {};
+  for (const t of doc.transactions) {
+    const m = monthOf(t.date);
+    const entry = (totals[m] ||= { income: 0, expenses: 0, variable: 0 });
+    if (t.type === 'income') {
+      entry.income += t.amount;
+    } else {
+      entry.expenses += t.amount;
+      if (!t.recurringId) entry.variable += t.amount;
+    }
+  }
+  for (const entry of Object.values(totals)) {
+    entry.income = round(entry.income);
+    entry.expenses = round(entry.expenses);
+    entry.variable = round(entry.variable);
+  }
+  return totals;
+}
+
+// Übertrag: Summe aus (Einnahmen − Ausgaben) aller Monate vor dem gewählten Monat,
+// also der Kontostand am Monatsanfang. Kann auch negativ sein.
+export function carryIn(doc, month, totals = monthlyTotals(doc)) {
+  if (doc.settings.carryOver === false) return 0;
+  let sum = 0;
+  for (const [m, t] of Object.entries(totals)) {
+    if (m < month) sum += t.income - t.expenses;
+  }
+  return round(sum);
+}
+
 export function monthSummary(doc, month) {
   let income = 0;
   let expenses = 0;
@@ -93,13 +126,101 @@ export function monthSummary(doc, month) {
   }
   income = round(income);
   expenses = round(expenses);
+  const carry = carryIn(doc, month);
   const limit = budgetLimit(doc, month);
-  const available = round(income - expenses); // FR-03, FR-07, FR-08
+  const available = round(carry + income - expenses); // FR-03, FR-07, FR-08, plus Übertrag
   const overBudget = limit > 0 && expenses > limit; // FR-09
   const negative = available < 0;
   const ratio = limit > 0 ? expenses / limit : 0;
   const status = overBudget || negative ? 'over' : ratio >= doc.settings.warnAt ? 'warn' : 'ok';
-  return { month, income, expenses, available, limit, ratio, overBudget, negative, status, spentByCategory };
+  return { month, carryIn: carry, income, expenses, available, limit, ratio, overBudget, negative, status, spentByCategory };
+}
+
+// ---------- Prognose Monatsende ----------
+
+const HISTORY_MONTHS = 3;
+
+// Hochrechnung der Ausgaben bis Monatsende, nur für den laufenden Monat (sonst null).
+// 1. Ausgaben teilen: fix (automatische und geplante Buchungen) und variabel (bis heute)
+// 2. variable Ausgaben pro Tag hochrechnen
+// 3. mit dem Durchschnitt der letzten Monate glätten, Gewicht = Anteil der vergangenen Tage
+export function forecastMonth(doc, month, todayIso) {
+  if (month !== monthOf(todayIso)) return null;
+
+  const days = daysInMonth(month);
+  const elapsed = Number(todayIso.slice(8, 10));
+  let fixed = 0;
+  let variable = 0;
+  for (const t of transactionsOfMonth(doc, month)) {
+    if (t.type !== 'expense') continue;
+    if (t.recurringId || t.date > todayIso) fixed += t.amount;
+    else variable += t.amount;
+  }
+
+  const extrapolated = (variable / elapsed) * days;
+
+  // Durchschnitt der variablen Ausgaben der letzten bis zu 3 Monate, die Buchungen haben.
+  const totals = monthlyTotals(doc);
+  const previous = [];
+  for (let i = 1; i <= HISTORY_MONTHS; i++) {
+    const t = totals[addMonths(month, -i)];
+    if (t) previous.push(t.variable);
+  }
+  const historyAverage = previous.length ? previous.reduce((a, b) => a + b, 0) / previous.length : null;
+
+  const weight = elapsed / days;
+  const blended = historyAverage === null ? extrapolated : weight * extrapolated + (1 - weight) * historyAverage;
+  // Was schon ausgegeben ist, kann nicht mehr weniger werden.
+  const variableForecast = Math.max(blended, variable);
+
+  const summary = monthSummary(doc, month);
+  const projectedExpenses = round(fixed + variableForecast);
+  const limit = summary.limit;
+  const daysRemaining = days - elapsed + 1;
+  const status =
+    limit > 0 && projectedExpenses > limit ? 'over' : limit > 0 && projectedExpenses >= limit * doc.settings.warnAt ? 'tight' : 'ok';
+
+  return {
+    month,
+    endDate: `${month}-${String(days).padStart(2, '0')}`,
+    daysElapsed: elapsed,
+    daysRemaining,
+    historyMonths: previous.length,
+    fixed: round(fixed),
+    variableSoFar: round(variable),
+    variableForecast: round(variableForecast),
+    projectedExpenses,
+    projectedAvailable: round(summary.carryIn + summary.income - projectedExpenses),
+    limit,
+    difference: round(projectedExpenses - limit),
+    // So viel darf ab heute pro Tag noch ausgegeben werden, um im Budget zu bleiben.
+    dailyAllowance: round(Math.max(limit - summary.expenses, 0) / daysRemaining),
+    status,
+  };
+}
+
+// ---------- Verlauf ----------
+
+// Die letzten count Monate bis endMonth (inklusive), auch Monate ohne Buchungen.
+export function history(doc, endMonth, count = 6) {
+  const totals = monthlyTotals(doc);
+  const months = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const month = addMonths(endMonth, -i);
+    const t = totals[month] || { income: 0, expenses: 0 };
+    const limit = budgetLimit(doc, month);
+    months.push({ month, income: t.income, expenses: t.expenses, limit, over: limit > 0 && t.expenses > limit, hasData: Boolean(totals[month]) });
+  }
+  const withData = months.filter((m) => m.hasData);
+  const incomeSum = withData.reduce((s, m) => s + m.income, 0);
+  const expenseSum = withData.reduce((s, m) => s + m.expenses, 0);
+  return {
+    months,
+    avgIncome: withData.length ? round(incomeSum / withData.length) : 0,
+    avgExpenses: withData.length ? round(expenseSum / withData.length) : 0,
+    // Sparquote: Anteil der Einnahmen, der übrig bleibt. Ohne Einnahmen nicht definiert.
+    savingsRate: incomeSum > 0 ? (incomeSum - expenseSum) / incomeSum : null,
+  };
 }
 
 // Karten im Dashboard: Fortschritt und Zustand je Kategorie.

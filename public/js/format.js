@@ -45,8 +45,21 @@ const monthFormat = new Intl.DateTimeFormat('de-AT', { month: 'long', year: 'num
 const shortDate = new Intl.DateTimeFormat('de-AT', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const longDate = new Intl.DateTimeFormat('de-AT', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
+const monthShortFormat = new Intl.DateTimeFormat('de-AT', { month: 'short', timeZone: 'UTC' });
+const monthNameFormat = new Intl.DateTimeFormat('de-AT', { month: 'long', timeZone: 'UTC' });
+
 export function monthLabel(month) {
   return monthFormat.format(new Date(`${month}-01T00:00:00Z`));
+}
+
+// "Sep", "Okt" (ohne Punkt, für Diagramm-Achsen)
+export function monthShort(month) {
+  return monthShortFormat.format(new Date(`${month}-01T00:00:00Z`)).replace('.', '');
+}
+
+// "September"
+export function monthName(month) {
+  return monthNameFormat.format(new Date(`${month}-01T00:00:00Z`));
 }
 
 export function dateLabel(iso) {

@@ -14,7 +14,7 @@ export function createDefaultDoc({ name, email, today = new Date() }) {
   return {
     version: 1,
     profile: { name, email, createdAt: today.toISOString().slice(0, 10) },
-    settings: { currency: 'EUR', warnAt: 0.9 },
+    settings: { currency: 'EUR', warnAt: 0.9, carryOver: true },
     budgetOverrides: {},
     overBudgetNotified: {},
     categories: DEFAULT_CATEGORIES.map((c) => ({ id: randomUUID(), ...c })),

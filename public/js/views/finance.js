@@ -17,7 +17,8 @@ export function renderFinance({ doc, month, currentMonth, summary, filter }) {
       <div class="kpis">
         <div class="kpi"><small>Einnahmen</small><strong class="pos">+${money(summary.income, cur, 2)}</strong></div>
         <div class="kpi"><small>Ausgaben</small><strong class="${summary.overBudget ? 'neg' : ''}">−${money(summary.expenses, cur, 2)}</strong></div>
-        <div class="kpi"><small>Verfügbar</small><strong class="${summary.negative ? 'neg' : ''}">${summary.negative ? '−' : ''}${money(summary.available, cur, 2)}</strong></div>
+        <div class="kpi"><small>Verfügbar</small><strong class="${summary.negative ? 'neg' : ''}">${summary.negative ? '−' : ''}${money(summary.available, cur, 2)}</strong>
+          ${summary.carryIn !== 0 ? `<small>inkl. Übertrag ${summary.carryIn < 0 ? '−' : '+'}${money(summary.carryIn, cur, 2)}</small>` : ''}</div>
         <div class="kpi"><small>Budget-Limit</small><strong>${money(summary.limit, cur, 2)}</strong></div>
       </div>
       <div class="finance">

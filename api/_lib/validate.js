@@ -72,7 +72,12 @@ export function sanitizeDoc(input, stored) {
       email: stored.profile.email,
       createdAt: stored.profile.createdAt,
     },
-    settings: { currency: settings.currency, warnAt: Math.round(settings.warnAt * 100) / 100 },
+    settings: {
+      currency: settings.currency,
+      warnAt: Math.round(settings.warnAt * 100) / 100,
+      // Übertrag aus dem Vormonat, fehlt bei älteren Dokumenten -> an
+      carryOver: settings.carryOver !== false,
+    },
     budgetOverrides: monthMap(input.budgetOverrides, 'budgetOverrides', (v, f) => amount(v, f, { allowZero: true })),
     overBudgetNotified: monthMap(input.overBudgetNotified, 'overBudgetNotified', (v) => v === true),
     categories: list(input.categories, 'categories', 50, (c, f) => ({

@@ -20,6 +20,12 @@
   --red-deep: #b3262b;
   --red-tint: #fbd9da;
 
+  /* Diagrammfarben, geprüft mit dem dataviz-Validator (CVD- und Kontrast-Checks bestanden) */
+  --chart-income: #1ea52f;
+  --chart-expense: #8b5cf6;
+  --chart-expense-soft: rgba(139, 92, 246, 0.55);
+  --chart-expense-faint: rgba(139, 92, 246, 0.16);
+
   --accent: var(--green);
   --accent-deep: var(--green-deep);
   --accent-tint: var(--green-tint);
@@ -496,11 +502,16 @@ input:focus {
    Dashboard
    ========================================================= */
 
+/* Die Prognose gibt es nur im laufenden Monat (.has-forecast), sonst nimmt der Verlauf ihren Platz ein. */
 .dash {
   display: grid;
   gap: 20px;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'hero' 'donut' 'recent' 'cats';
+  grid-template-areas: 'hero' 'donut' 'trend' 'recent' 'cats';
+}
+
+.dash.has-forecast {
+  grid-template-areas: 'hero' 'forecast' 'donut' 'trend' 'recent' 'cats';
 }
 
 .dash-hero {
@@ -508,6 +519,12 @@ input:focus {
 }
 .dash-donut {
   grid-area: donut;
+}
+.dash-forecast {
+  grid-area: forecast;
+}
+.dash-trend {
+  grid-area: trend;
 }
 .dash-recent {
   grid-area: recent;
@@ -519,20 +536,363 @@ input:focus {
 @container main (min-width: 820px) {
   .dash {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas: 'hero donut' 'cats cats' 'recent recent';
+    grid-template-areas: 'hero donut' 'trend trend' 'cats cats' 'recent recent';
+  }
+  .dash.has-forecast {
+    grid-template-areas: 'hero donut' 'forecast trend' 'cats cats' 'recent recent';
   }
 }
 
 @container main (min-width: 1000px) {
   .dash {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: 'hero donut donut' 'cats cats recent';
+    grid-template-areas: 'hero donut donut' 'trend trend trend' 'cats cats recent';
     align-items: start;
   }
+  .dash.has-forecast {
+    grid-template-areas: 'hero donut donut' 'forecast trend trend' 'cats cats recent';
+  }
   .dash-hero,
-  .dash-donut {
+  .dash-donut,
+  .dash-forecast,
+  .dash-trend {
     align-self: stretch;
   }
+}
+
+/* Prognose */
+.forecast-card,
+.trend-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--green-tint);
+  color: var(--green-deep);
+}
+
+.status-chip.tight {
+  background: #fdf0cc;
+  color: #8a6100;
+}
+
+.status-chip.over {
+  background: var(--red-tint);
+  color: var(--red-deep);
+}
+
+.forecast-value {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.forecast-caption {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.meter {
+  position: relative;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  overflow: visible;
+}
+
+.meter-spent,
+.meter-projected {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-pill);
+}
+
+.meter-spent {
+  background: var(--chart-expense);
+}
+
+/* Prognose-Anteil schraffiert, damit er auch ohne Farbunterschied erkennbar ist */
+.meter-projected {
+  background: repeating-linear-gradient(135deg, var(--chart-expense-soft) 0 4px, transparent 4px 8px), var(--chart-expense-faint);
+}
+
+.meter-limit {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+  border-radius: 2px;
+}
+
+.meter-key,
+.chart-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.meter-key span,
+.chart-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meter-key i,
+.chart-key i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.k-spent,
+.k-expense {
+  background: var(--chart-expense);
+}
+
+.k-projected {
+  background: repeating-linear-gradient(135deg, var(--chart-expense-soft) 0 2px, transparent 2px 4px), var(--chart-expense-faint);
+}
+
+.k-income {
+  background: var(--chart-income);
+}
+
+.meter-key .k-limit,
+.chart-key .k-limit {
+  width: 12px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px dashed var(--text);
+}
+
+.meter-key .k-limit {
+  border-top-style: solid;
+}
+
+.chart-key .k-over,
+.chart-over {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.forecast-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.mini-stats.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mini-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mini-stats small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mini-stats strong {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-stats .neg {
+  color: var(--red);
+}
+
+.card-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Verlauf (Balkendiagramm aus HTML, damit die Schrift in jeder Breite lesbar bleibt) */
+.chart {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  --plot-h: 190px;
+  --label-h: 26px;
+}
+
+.chart-axis {
+  position: relative;
+  height: var(--plot-h);
+  min-width: 28px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.chart-axis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  white-space: nowrap;
+}
+
+.chart-plot {
+  position: relative;
+}
+
+.chart-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--plot-h);
+  pointer-events: none;
+}
+
+.chart-grid span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--line);
+}
+
+.chart-grid span:first-child {
+  border-top-color: #dcdcdc;
+}
+
+.chart-groups {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.chart-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.chart-group:hover .chart-bars,
+.chart-group.is-selected .chart-bars {
+  background: rgba(10, 10, 10, 0.035);
+}
+
+.chart-bars {
+  height: var(--plot-h);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  border-radius: 10px 10px 0 0;
+  transition: background 160ms;
+}
+
+.bar-slot {
+  position: relative;
+  height: 100%;
+  width: clamp(8px, 28%, 22px);
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 480ms;
+}
+
+.bar.income {
+  background: var(--chart-income);
+}
+
+.bar.expense {
+  background: var(--chart-expense);
+}
+
+.chart-limit {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  border-top: 2px dashed var(--text);
+}
+
+.chart-over {
+  position: absolute;
+  left: 50%;
+  margin-left: -7px;
+}
+
+.chart-label {
+  height: var(--label-h);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chart-group.is-selected .chart-label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Hero */
@@ -1550,6 +1910,37 @@ body.is-over .donut-center strong {
 
 .setting.danger {
   color: var(--red);
+}
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: #dcdcdc;
+  flex-shrink: 0;
+  transition: background 160ms;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 160ms;
+}
+
+.switch.on {
+  background: var(--green);
+}
+
+.switch.on::after {
+  transform: translateX(18px);
 }
 
 /* =========================================================

@@ -9,7 +9,13 @@ import {
   donutArcs,
   shouldNotifyOverBudget,
   transactionsToCsv,
+  carryIn,
+  forecastMonth,
+  history,
 } from '../public/js/calc.js';
+
+const income = (id, amount, date) => ({ id, type: 'income', amount, categoryId: null, note: '', date, recurringId: null });
+const expense = (id, amount, date, extra = {}) => ({ id, type: 'expense', amount, categoryId: 'essen', note: '', date, recurringId: null, ...extra });
 
 let counter = 0;
 const newId = () => `id-${++counter}`;
@@ -95,10 +101,16 @@ test('monthSummary: Kontostand-Modell', () => {
   const s = monthSummary(doc, '2026-09');
   assert.equal(s.income, 2500);
   assert.equal(s.expenses, 1020.5);
-  assert.equal(s.available, 1479.5);
+  // Die August-Ausgabe von 999 wandert als negativer Übertrag in den September.
+  assert.equal(s.carryIn, -999);
+  assert.equal(s.available, 480.5);
   assert.equal(s.limit, 1400);
   assert.equal(s.status, 'ok');
   assert.equal(s.spentByCategory.essen, 120.5);
+  // Ohne Übertrag zählt nur der Monat selbst.
+  const alone = monthSummary({ ...doc, settings: { ...doc.settings, carryOver: false } }, '2026-09');
+  assert.equal(alone.carryIn, 0);
+  assert.equal(alone.available, 1479.5);
 });
 
 test('Budget-Override gilt nur für seinen Monat', () => {
@@ -155,4 +167,113 @@ test('CSV-Export mit Semikolon und Escaping', () => {
   const lines = transactionsToCsv(doc).split('\r\n');
   assert.equal(lines[0], 'Datum;Typ;Kategorie;Notiz;Betrag;Automatisch');
   assert.equal(lines[1], '2026-09-05;Ausgabe;Essen;"Pizza; groß";-9.50;nein');
+});
+
+// ---------- Übertrag ----------
+
+test('Übertrag: positiv und negativ über mehrere Monate, auch über leere Monate', () => {
+  const doc = makeDoc({
+    transactions: [
+      income('a', 2000, '2026-06-01'),
+      expense('b', 1500, '2026-06-10'), // Juni: +500
+      expense('c', 800, '2026-07-05'), // Juli: -800 -> Stand -300
+      // August leer
+      income('d', 1000, '2026-09-01'),
+    ],
+  });
+  assert.equal(carryIn(doc, '2026-06'), 0);
+  assert.equal(carryIn(doc, '2026-07'), 500);
+  assert.equal(carryIn(doc, '2026-08'), -300);
+  assert.equal(carryIn(doc, '2026-09'), -300);
+  assert.equal(monthSummary(doc, '2026-09').available, 700);
+  // Zukünftiger Monat übernimmt den Stand bis dahin.
+  assert.equal(carryIn(doc, '2026-12'), 700);
+});
+
+test('Übertrag ausgeschaltet', () => {
+  const doc = makeDoc({ settings: { currency: 'EUR', warnAt: 0.9, carryOver: false }, transactions: [income('a', 500, '2026-08-01')] });
+  assert.equal(carryIn(doc, '2026-09'), 0);
+});
+
+test('Negativer Übertrag färbt den neuen Monat rot', () => {
+  const doc = makeDoc({ transactions: [expense('a', 100, '2026-08-03'), income('b', 50, '2026-09-01')] });
+  const s = monthSummary(doc, '2026-09');
+  assert.equal(s.available, -50);
+  assert.equal(s.status, 'over');
+  assert.equal(s.overBudget, false);
+});
+
+// ---------- Prognose ----------
+
+test('Prognose nur für den laufenden Monat', () => {
+  const doc = makeDoc();
+  assert.equal(forecastMonth(doc, '2026-08', '2026-09-15'), null);
+  assert.equal(forecastMonth(doc, '2026-10', '2026-09-15'), null);
+});
+
+test('Prognose ohne Historie: reine Hochrechnung', () => {
+  // 300 variabel in 10 Tagen -> 30 pro Tag -> 900 im September (30 Tage)
+  const doc = makeDoc({ transactions: [expense('a', 300, '2026-09-05')] });
+  const f = forecastMonth(doc, '2026-09', '2026-09-10');
+  assert.equal(f.historyMonths, 0);
+  assert.equal(f.variableForecast, 900);
+  assert.equal(f.projectedExpenses, 900);
+  assert.equal(f.status, 'ok'); // Limit 1400, Warnung ab 1260
+  assert.equal(f.endDate, '2026-09-30');
+});
+
+test('Prognose: fixe und geplante Buchungen werden nicht hochgerechnet', () => {
+  const doc = makeDoc({
+    transactions: [
+      expense('miete', 900, '2026-09-01', { recurringId: 'r1', categoryId: 'wohnen' }),
+      expense('geplant', 100, '2026-09-25'),
+      expense('a', 150, '2026-09-04'),
+    ],
+  });
+  const f = forecastMonth(doc, '2026-09', '2026-09-10');
+  assert.equal(f.fixed, 1000);
+  assert.equal(f.variableSoFar, 150);
+  assert.equal(f.projectedExpenses, 1450); // 1000 + 150/10*30
+  assert.equal(f.status, 'over');
+  assert.equal(f.difference, 50);
+  // Noch 250 bis zum Limit (1400 - 900 - 100 geplant - 150), 21 Tage inkl. heute
+  assert.equal(f.dailyAllowance, 11.9);
+});
+
+test('Prognose: Glättung mit dem Durchschnitt der Vormonate', () => {
+  // Historie: Juli 600, August 600 variabel. Heute Tag 6 von 30 mit 300 variabel -> Hochrechnung 1500.
+  // Gewicht 6/30 = 0.2 -> 0.2 * 1500 + 0.8 * 600 = 780
+  const doc = makeDoc({
+    transactions: [expense('j', 600, '2026-07-10'), expense('a', 600, '2026-08-10'), expense('s', 300, '2026-09-03')],
+  });
+  const f = forecastMonth(doc, '2026-09', '2026-09-06');
+  assert.equal(f.historyMonths, 2);
+  assert.equal(f.variableForecast, 780);
+});
+
+test('Prognose fällt nie unter die bisherigen Ausgaben', () => {
+  const doc = makeDoc({ transactions: [expense('a', 2000, '2026-08-10'), expense('s', 500, '2026-09-28')] });
+  // Hohe Hochrechnung wird nicht unterschritten; auch an Tag 1 ohne Ausgaben kein Fehler.
+  const f = forecastMonth(doc, '2026-09', '2026-09-29');
+  assert.ok(f.projectedExpenses >= 500);
+  const day1 = forecastMonth(makeDoc(), '2026-09', '2026-09-01');
+  assert.equal(day1.projectedExpenses, 0);
+  assert.equal(day1.daysRemaining, 30);
+});
+
+// ---------- Verlauf ----------
+
+test('Verlauf: 6 Monate inkl. leerer Monate und Jahreswechsel', () => {
+  const doc = makeDoc({ transactions: [income('a', 1000, '2026-11-01'), expense('b', 400, '2026-11-05'), expense('c', 1500, '2027-01-03')] });
+  const h = history(doc, '2027-02');
+  assert.deepEqual(h.months.map((m) => m.month), ['2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02']);
+  assert.deepEqual(h.months.map((m) => m.expenses), [0, 0, 400, 0, 1500, 0]);
+  assert.equal(h.months[4].over, true); // 1500 > 1400
+  assert.equal(h.avgExpenses, 950); // Ø nur über Monate mit Buchungen
+  assert.equal(h.avgIncome, 500);
+  assert.equal(h.savingsRate, -0.9); // (1000 - 1900) / 1000
+});
+
+test('Verlauf: Sparquote ohne Einnahmen ist nicht definiert', () => {
+  assert.equal(history(makeDoc({ transactions: [expense('a', 10, '2026-09-01')] }), '2026-09').savingsRate, null);
 });

@@ -128,6 +128,15 @@ const actions = {
   'prev-month': () => setMonth(addMonths(ui.month, -1)),
   'next-month': () => setMonth(addMonths(ui.month, 1)),
   'current-month': () => setMonth(monthOf(todayIso())),
+  'select-month': ({ month }) => setMonth(month),
+
+  'toggle-carry': () => {
+    const on = getDoc().settings.carryOver === false;
+    update((d) => {
+      d.settings.carryOver = on;
+    });
+    toast(on ? 'Übertrag aus dem Vormonat ist an' : 'Übertrag aus dem Vormonat ist aus', 'success');
+  },
   filter: ({ filter }) => {
     ui.filter = filter;
     render();

@@ -21,6 +21,7 @@ export function renderProfile({ doc, month, summary }) {
       items: [
         { label: 'Währung', value: CURRENCY_NAMES[cur], action: 'edit-currency' },
         { label: 'Warnung bei', value: `${Math.round(doc.settings.warnAt * 100)} % vom Budget`, action: 'edit-warn' },
+        { label: 'Übertrag aus Vormonat', toggle: doc.settings.carryOver !== false, action: 'toggle-carry' },
       ],
     },
     {
@@ -39,6 +40,13 @@ export function renderProfile({ doc, month, summary }) {
         <div class="settings-group">${esc(group.title)}</div>
         ${group.items
           .map((s) => {
+            // Umschalter: ganze Zeile ist der Button, rechts ein Schalter
+            if (s.toggle !== undefined) {
+              return `<button type="button" class="setting" data-action="${s.action}" role="switch" aria-checked="${s.toggle}">
+                <span>${esc(s.label)}</span>
+                <span class="switch ${s.toggle ? 'on' : ''}" aria-hidden="true"></span>
+              </button>`;
+            }
             const open = s.action ? `button type="button" data-action="${s.action}"` : 'div';
             const close = s.action ? 'button' : 'div';
             return `<${open} class="setting ${s.danger ? 'danger' : ''}">
