@@ -9,6 +9,7 @@ const ROOT = process.cwd();
 const PUBLIC = path.join(ROOT, 'public');
 const PORT = Number(process.env.PORT) || 3000;
 
+loadEnv(path.join(ROOT, '.env.local'));
 loadEnv(path.join(ROOT, '.env'));
 
 const MIME = {

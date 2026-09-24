@@ -150,3 +150,7 @@ vite.config.ts.timestamp-*
 
 # Lokale Claude-Code-Einstellungen
 .claude/
+
+# Von Vercel erzeugte lokale Env-Dateien
+.env*
+!.env.example
