@@ -25,6 +25,10 @@ export function renderProfile({ doc, month, summary }) {
       ],
     },
     {
+      title: 'Hilfe',
+      items: [{ label: 'Hilfe & Anleitung', value: 'Alle Funktionen erklärt', href: '/hilfe' }],
+    },
+    {
       title: 'Daten',
       items: [
         { label: 'Buchungen exportieren', value: 'CSV', action: 'export-csv' },
@@ -46,6 +50,12 @@ export function renderProfile({ doc, month, summary }) {
                 <span>${esc(s.label)}</span>
                 <span class="switch ${s.toggle ? 'on' : ''}" aria-hidden="true"></span>
               </button>`;
+            }
+            if (s.href) {
+              return `<a class="setting" href="${s.href}">
+                <span>${esc(s.label)}</span>
+                <span class="setting-value"><span style="overflow:hidden;text-overflow:ellipsis">${esc(s.value)}</span>${icons.chevron}</span>
+              </a>`;
             }
             const open = s.action ? `button type="button" data-action="${s.action}"` : 'div';
             const close = s.action ? 'button' : 'div';

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hilfe &amp; Anleitung · Budget Planner</title>
+  <meta name="description" content="Anleitung zum Budget Planner: erste Schritte, alle Funktionen, wie gerechnet wird und häufige Fragen.">
+  <meta name="theme-color" content="#FAFAFA">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="help-page">
+  <header class="help-header">
+    <div class="help-header-inner">
+      <a class="brand" href="/" aria-label="Budget Planner, zur App">
+        <span class="brand-logo" aria-hidden="true">B</span>
+        <span class="brand-text">Budget Planner</span>
+      </a>
+      <span class="help-badge">Hilfe &amp; Anleitung</span>
+      <a class="btn-action expense help-cta" href="/">Zur App</a>
+    </div>
+  </header>
+
+  <div class="help-layout">
+    <nav class="help-toc" aria-label="Inhalt">
+      <details open>
+        <summary>Inhalt</summary>
+        <ol>
+          <li><a href="#ueberblick">Überblick</a></li>
+          <li><a href="#erste-schritte">Erste Schritte</a></li>
+          <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#buchungen">Buchungen erfassen</a></li>
+          <li><a href="#finance">Finance Manager</a></li>
+          <li><a href="#wiederkehrend">Gehalt &amp; Fixkosten</a></li>
+          <li><a href="#kategorien">Kategorien &amp; Budget</a></li>
+          <li><a href="#rechnung">So wird gerechnet</a></li>
+          <li><a href="#profil">Profil &amp; Einstellungen</a></li>
+          <li><a href="#handy">Am Handy</a></li>
+          <li><a href="#faq">Häufige Fragen</a></li>
+          <li><a href="#datenschutz">Daten &amp; Sicherheit</a></li>
+          <li><a href="#projekt">Über das Projekt</a></li>
+        </ol>
+      </details>
+    </nav>
+
+    <main class="help-content">
+      <!-- Überblick -->
+      <section id="ueberblick" class="help-hero">
+        <span class="eyebrow">Anleitung</span>
+        <h1 class="page-title">So funktioniert dein <span>Budget Planner</span></h1>
+        <p class="help-lead">
+          Der Budget Planner zeigt dir jederzeit, wie viel Geld du diesen Monat noch zur Verfügung hast.
+          Du trägst Einnahmen und Ausgaben ein, teilst sie in Kategorien auf und bekommst eine Warnung,
+          bevor dein Budget knapp wird. Gehalt und Fixkosten wie die Miete bucht die App jeden Monat automatisch.
+        </p>
+        <div class="help-features">
+          <div class="help-feature">
+            <span class="help-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+            <strong>Überblick auf einen Blick</strong>
+            <p>Verfügbares Geld, Ausgaben nach Kategorie, Prognose bis Monatsende und Verlauf der letzten 6 Monate.</p>
+          </div>
+          <div class="help-feature">
+            <span class="help-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg></span>
+            <strong>Automatische Buchungen</strong>
+            <p>Gehalt und Fixkosten einmal anlegen, dann bucht die App sie am 1. jedes Monats von selbst.</p>
+          </div>
+          <div class="help-feature">
+            <span class="help-feature-icon warn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17"/></svg></span>
+            <strong>Warnung bei Überschreitung</strong>
+            <p>Kategorien werden gelb, wenn es knapp wird, und die ganze App wird rot, wenn dein Budget überschritten ist.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Erste Schritte -->
+      <section id="erste-schritte" class="help-section">
+        <h2>Erste Schritte</h2>
+        <p>In fünf Minuten ist dein Budget eingerichtet:</p>
+        <ol class="help-steps">
+          <li>
+            <strong>Account anlegen.</strong>
+            Auf der Startseite auf <em>Registrieren</em> umschalten, Name, E-Mail und ein Passwort mit mindestens 8 Zeichen eingeben.
+            Du bist danach sofort eingeloggt und bleibst es 7 Tage lang in diesem Browser.
+          </li>
+          <li>
+            <strong>Gehalt anlegen.</strong>
+            Im <em>Finance Manager</em> unter <em>Gehalt &amp; Fixkosten</em> auf <em>+ Gehalt</em> tippen und den Betrag eintragen.
+            Es wird sofort für diesen Monat gebucht und danach am 1. jedes Monats.
+          </li>
+          <li>
+            <strong>Fixkosten anlegen.</strong>
+            Genauso mit <em>+ Fixkosten</em>: Miete, Handyvertrag, Versicherung, Streaming-Abos. Jede Fixkostenposition bekommt eine Kategorie.
+          </li>
+          <li>
+            <strong>Kategorien anpassen.</strong>
+            Im Dashboard sind sechs Kategorien vorbereitet (Wohnen, Essen, Mobilität, Freizeit, Sparen, Sonstiges).
+            Tippe eine Kategorie an, um Name, Budget oder Farbe zu ändern, oder lege mit <em>Neue Kategorie</em> eigene an.
+          </li>
+          <li>
+            <strong>Ausgaben eintragen.</strong>
+            Mit <em>Ausgabe</em> (am Handy das <em>−</em> oben rechts) trägst du ab jetzt ein, was du ausgibst: Betrag, Kategorie, optional eine Notiz.
+          </li>
+        </ol>
+        <div class="help-callout">
+          <strong>Tipp:</strong> Je regelmäßiger du Ausgaben einträgst, desto genauer wird die Prognose für das Monatsende.
+        </div>
+      </section>
+
+      <!-- Dashboard -->
+      <section id="dashboard" class="help-section">
+        <h2>Dashboard</h2>
+        <p>Das Dashboard ist deine Startseite. Oben rechts wählst du den Monat: mit den Pfeilen vor und zurück, ein Klick auf den Monatsnamen bringt dich zurück zum aktuellen Monat.</p>
+        <dl class="help-list">
+          <dt>Noch verfügbar</dt>
+          <dd>Die große schwarze Karte. Sie zeigt, wie viel Geld dir in diesem Monat noch bleibt, inklusive Übertrag aus dem Vormonat.
+            Darunter siehst du, wie viel das ungefähr pro Tag bis Monatsende ist, und einen Balken: wie viel vom Budget schon ausgegeben ist.
+            Ist die Zahl negativ, steht dort <em>Im Minus</em>.</dd>
+          <dt>Ausgaben nach Kategorie</dt>
+          <dd>Der Ring zeigt pro Kategorie zwei Dinge: hell das geplante Budget, kräftig das bereits Ausgegebene.
+            Die Legende daneben zeigt Betrag und Anteil an allen Ausgaben des Monats.</dd>
+          <dt>Prognose Monatsende</dt>
+          <dd>Nur im laufenden Monat. Sie schätzt, wie viel du bis Monatsende ausgeben wirst, und sagt dir, ob du damit
+            <em>im Plan</em>, <em>knapp</em> oder <em>über Budget</em> bist. Dazu: wie viel pro Tag noch drin ist, ohne das Budget zu sprengen.
+            Wie die Schätzung entsteht, steht unter <a href="#rechnung">So wird gerechnet</a>.</dd>
+          <dt>Verlauf · 6 Monate</dt>
+          <dd>Grüne Balken sind Einnahmen, violette Ausgaben. Die gestrichelte Linie ist das Budget-Limit des Monats, ein rotes <span class="help-over">!</span> markiert Monate über Budget.
+            Tippe auf einen Monat, um direkt dorthin zu springen. Darunter: durchschnittliche Einnahmen und Ausgaben sowie deine Sparquote.</dd>
+          <dt>Kategorien</dt>
+          <dd>Jede Karte zeigt, wie viel in der Kategorie noch übrig ist. Grau heißt alles gut, <span class="help-warn">gelb</span> heißt knapp
+            (ab deiner Warnschwelle, standardmäßig 90 %), <span class="help-red">rot</span> heißt überschritten.</dd>
+          <dt>Letzte Buchungen</dt>
+          <dd>Die sechs neuesten Buchungen des Monats. Antippen öffnet die Buchung zum Bearbeiten, <em>Alle ansehen</em> führt zum Finance Manager.</dd>
+        </dl>
+      </section>
+
+      <!-- Buchungen -->
+      <section id="buchungen" class="help-section">
+        <h2>Buchungen erfassen</h2>
+        <p>Neue Buchungen legst du über die Buttons <em>Einnahme</em> und <em>Ausgabe</em> oben rechts an (am Handy <em>+</em> und <em>−</em>).</p>
+        <ul>
+          <li><strong>Betrag:</strong> mit Komma oder Punkt, zum Beispiel <code>12,50</code>.</li>
+          <li><strong>Kategorie:</strong> nur bei Ausgaben. Tippe die passende Kategorie an.</li>
+          <li><strong>Notiz:</strong> optional, erscheint als Titel in der Liste, zum Beispiel „Billa Wocheneinkauf“.</li>
+          <li><strong>Datum:</strong> ist auf heute gesetzt. Du kannst auch zurück- oder vordatieren, etwa für eine geplante Zahlung.</li>
+        </ul>
+        <p><strong>Bearbeiten oder löschen:</strong> Buchung in der Liste antippen, Werte ändern und speichern, oder unten auf <em>Buchung löschen</em>.</p>
+        <p>Im oberen Dialog kannst du zwischen <em>Ausgabe</em> und <em>Einnahme</em> umschalten, falls du den falschen Button erwischt hast.</p>
+      </section>
+
+      <!-- Finance Manager -->
+      <section id="finance" class="help-section">
+        <h2>Finance Manager</h2>
+        <p>Hier siehst du alle Buchungen des gewählten Monats im Detail.</p>
+        <ul>
+          <li><strong>Kennzahlen:</strong> Einnahmen, Ausgaben, verfügbar (mit Übertrag) und dein Budget-Limit.</li>
+          <li><strong>Filter:</strong> <em>Alle</em>, <em>Ausgaben</em> oder <em>Einnahmen</em>. Rechts steht, wie viele Buchungen angezeigt werden.</li>
+          <li><strong>Buchungsliste:</strong> neueste zuerst. Automatisch erzeugte Buchungen tragen das Kennzeichen <span class="badge">Auto</span>.</li>
+          <li><strong>Gehalt &amp; Fixkosten:</strong> die wiederkehrenden Posten, siehe nächster Abschnitt.</li>
+        </ul>
+      </section>
+
+      <!-- Wiederkehrend -->
+      <section id="wiederkehrend" class="help-section">
+        <h2>Gehalt &amp; Fixkosten</h2>
+        <p>Alles, was jeden Monat gleich bleibt, legst du einmal an. Die App bucht es dann am <strong>1. jedes Monats</strong> automatisch.</p>
+        <ul>
+          <li><strong>Neu anlegen:</strong> wird sofort für den aktuellen Monat gebucht.</li>
+          <li><strong>App länger nicht geöffnet?</strong> Kein Problem: Verpasste Monate werden beim nächsten Öffnen nachgebucht, jeder genau einmal.</li>
+          <li><strong>Ändern:</strong> Ein neuer Betrag gilt ab der nächsten automatischen Buchung. Bereits gebuchte Monate bleiben, wie sie sind.</li>
+          <li><strong>Pausieren:</strong> Schalter <em>Aktiv</em> ausschalten. Pausierte Monate werden später nicht nachgeholt.</li>
+          <li><strong>Löschen:</strong> Es wird ab sofort nichts mehr gebucht. Bisherige Buchungen bleiben in deiner Liste.</li>
+        </ul>
+        <p>Unter der Liste siehst du die Summen: Einnahmen pro Monat, Fixkosten pro Monat und was nach den Fixkosten übrig bleibt.</p>
+      </section>
+
+      <!-- Kategorien & Budget -->
+      <section id="kategorien" class="help-section">
+        <h2>Kategorien &amp; Budget</h2>
+        <h3>Kategorien</h3>
+        <p>Jede Kategorie hat einen Namen, eine Farbe und ein Monatsbudget. Namen müssen eindeutig sein.
+          Wenn du eine Kategorie löschst, bleiben ihre Buchungen erhalten und stehen danach unter <em>Ohne Kategorie</em>.</p>
+        <h3>Monatsbudget</h3>
+        <p>Dein <strong>Budget-Limit</strong> ist die Obergrenze für alle Ausgaben eines Monats. Standardmäßig ist es die
+          <strong>Summe deiner Kategorie-Budgets</strong>. Unter <em>Profil → Monatsbudget → Anpassen</em> kannst du für einen einzelnen Monat
+          einen eigenen Wert festlegen und später wieder auf die Summe zurücksetzen.</p>
+        <h3>Warnungen</h3>
+        <ul>
+          <li><span class="help-warn">Gelb</span>: Eine Kategorie hat deine Warnschwelle erreicht (einstellbar von 75 bis 100 %).</li>
+          <li><span class="help-red">Rot</span>: Die App färbt sich rot, sobald deine Ausgaben das Budget-Limit übersteigen oder dein verfügbares Geld unter null fällt.</li>
+          <li>Beim ersten Überschreiten im Monat bekommst du zusätzlich eine Meldung, danach nicht bei jeder weiteren Ausgabe.</li>
+        </ul>
+      </section>
+
+      <!-- Rechnung -->
+      <section id="rechnung" class="help-section">
+        <h2>So wird gerechnet</h2>
+
+        <h3>Noch verfügbar</h3>
+        <div class="help-formula">Verfügbar = Übertrag + Einnahmen − Ausgaben</div>
+        <p>Das funktioniert wie ein Kontostand. Alles, was du im Monat einnimmst, kommt dazu, alles, was du ausgibst, geht weg.</p>
+
+        <h3>Übertrag aus dem Vormonat</h3>
+        <p>Was am Ende eines Monats übrig bleibt, wandert in den nächsten Monat. Ein Minus wandert genauso mit.
+          Der erste Monat startet bei 0 €. Wenn du jeden Monat einzeln betrachten willst, schalte den Übertrag im Profil aus.</p>
+        <div class="help-example">
+          <strong>Beispiel</strong>
+          <table>
+            <tr><td>August: Einnahmen 2.400 €, Ausgaben 1.755 €</td><td>bleiben 645 €</td></tr>
+            <tr><td>September: Übertrag + Einnahmen 2.550 € − Ausgaben 1.544 €</td><td>645 + 2.550 − 1.544 = <strong>1.651 €</strong></td></tr>
+          </table>
+        </div>
+
+        <h3>Prognose Monatsende</h3>
+        <p>Die App schätzt, wie viel du bis Monatsende ausgeben wirst:</p>
+        <ol>
+          <li><strong>Fixe Ausgaben</strong> (automatische Buchungen und vordatierte Zahlungen) werden so übernommen, wie sie sind.</li>
+          <li><strong>Übrige Ausgaben</strong> werden pro Tag hochgerechnet: bisher ausgegeben ÷ vergangene Tage × Tage im Monat.</li>
+          <li>Weil eine Hochrechnung am Monatsanfang stark schwankt (ein Großeinkauf am 2. würde alles verzerren), mischt die App den
+            <strong>Durchschnitt deiner letzten bis zu 3 Monate</strong> dazu. Am Monatsanfang zählt vor allem die Erfahrung, gegen Monatsende vor allem das aktuelle Tempo.</li>
+        </ol>
+        <div class="help-formula">Prognose = Fix + (Anteil vergangener Tage × Hochrechnung + Rest × Ø Vormonate)</div>
+        <p>Ergebnis: <em>Im Plan</em>, <em>Knapp</em> (ab deiner Warnschwelle) oder <em>Über Budget</em>.
+          „Noch pro Tag drin“ ist das, was du ab heute täglich ausgeben kannst, ohne das Budget-Limit zu überschreiten.</p>
+
+        <h3>Sparquote</h3>
+        <div class="help-formula">Sparquote = (Einnahmen − Ausgaben) ÷ Einnahmen</div>
+        <p>Berechnet über die letzten 6 Monate. 20 % heißt: Von jedem verdienten Euro bleiben dir 20 Cent.</p>
+      </section>
+
+      <!-- Profil -->
+      <section id="profil" class="help-section">
+        <h2>Profil &amp; Einstellungen</h2>
+        <dl class="help-list">
+          <dt>Name</dt><dd>Wird in der App angezeigt. Die E-Mail-Adresse kann nicht geändert werden.</dd>
+          <dt>Monatsbudget</dt><dd>Eigenes Limit für den gewählten Monat festlegen oder auf die Summe der Kategorien zurücksetzen.</dd>
+          <dt>Währung</dt><dd>Euro, Schweizer Franken oder US-Dollar. Das ändert nur die Anzeige, Beträge werden nicht umgerechnet.</dd>
+          <dt>Warnung bei</dt><dd>Ab welchem Anteil vom Budget Kategorien gelb werden und die Prognose „knapp“ meldet.</dd>
+          <dt>Übertrag aus Vormonat</dt><dd>An: laufender Kontostand über alle Monate. Aus: Jeder Monat startet bei 0 €.</dd>
+          <dt>Buchungen exportieren</dt><dd>Lädt alle Buchungen als CSV-Datei herunter, die sich direkt in Excel öffnen lässt.</dd>
+          <dt>Abmelden / Account löschen</dt><dd>Löschen entfernt deinen Account und alle Daten endgültig. Das lässt sich nicht rückgängig machen.</dd>
+        </dl>
+        <p>Alle Änderungen werden <strong>automatisch gespeichert</strong>. Am Computer siehst du unten links, ob alles gespeichert ist.</p>
+      </section>
+
+      <!-- Handy -->
+      <section id="handy" class="help-section">
+        <h2>Am Handy</h2>
+        <ul>
+          <li>Die Navigation (Dashboard, Finance Manager, Profil) ist unten am Bildschirm.</li>
+          <li><em>+</em> und <em>−</em> oben rechts legen eine Einnahme oder Ausgabe an.</li>
+          <li>Dialoge öffnen sich von unten und schließen sich per <em>×</em> oder mit einem Tipp daneben.</li>
+          <li>Tipp: Über „Zum Startbildschirm hinzufügen“ in deinem Browser liegt die App wie eine normale App auf dem Handy.</li>
+        </ul>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq" class="help-section">
+        <h2>Häufige Fragen</h2>
+        <div class="help-faq">
+          <details>
+            <summary>Warum ist die App auf einmal rot?</summary>
+            <p>Entweder sind deine Ausgaben in diesem Monat höher als dein Budget-Limit, oder dein verfügbares Geld ist unter null.
+              Im Dashboard steht, um wie viel das Budget überschritten ist. Über <em>Budget anpassen</em> kannst du das Limit für diesen Monat erhöhen.</p>
+          </details>
+          <details>
+            <summary>Ich habe eine automatische Buchung gelöscht. Kommt sie zurück?</summary>
+            <p>Nein. Die App merkt sich, dass der Monat bereits gebucht wurde. Wenn du sie brauchst, lege die Buchung einfach von Hand neu an.</p>
+          </details>
+          <details>
+            <summary>Warum sehe ich keine Prognose?</summary>
+            <p>Die Prognose gibt es nur für den laufenden Monat. Für vergangene Monate stehen die echten Zahlen fest, für zukünftige gibt es noch keine Daten.</p>
+          </details>
+          <details>
+            <summary>Die Prognose am Monatsanfang wirkt komisch.</summary>
+            <p>In den ersten Tagen gibt es wenig Daten. Die App stützt sich dann vor allem auf deine Vormonate. Im allerersten Monat ohne Vormonate ist die Schätzung naturgemäß ungenauer.</p>
+          </details>
+          <details>
+            <summary>Kann ich die App auf Handy und Computer gleichzeitig nutzen?</summary>
+            <p>Ja, melde dich einfach auf beiden Geräten mit derselben E-Mail an. Bearbeite aber nicht gleichzeitig auf zwei Geräten, sonst gewinnt die zuletzt gespeicherte Änderung.</p>
+          </details>
+          <details>
+            <summary>Ich habe mein Passwort vergessen.</summary>
+            <p>Ein Zurücksetzen per E-Mail gibt es in dieser Version noch nicht. Lege in dem Fall einen neuen Account an.</p>
+          </details>
+          <details>
+            <summary>Wie trage ich eine Rückzahlung oder Gutschrift ein?</summary>
+            <p>Als <em>Einnahme</em>, zum Beispiel „Rückerstattung Onlineshop“. So steigt dein verfügbares Geld wieder.</p>
+          </details>
+          <details>
+            <summary>Was passiert mit Buchungen, wenn ich eine Kategorie lösche?</summary>
+            <p>Sie bleiben erhalten und werden als <em>Ohne Kategorie</em> angezeigt. Du kannst sie jederzeit einer anderen Kategorie zuordnen.</p>
+          </details>
+          <details>
+            <summary>Wie komme ich an meine Daten?</summary>
+            <p>Unter <em>Profil → Buchungen exportieren</em> bekommst du alle Buchungen als CSV-Datei, zum Beispiel für Excel.</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- Datenschutz -->
+      <section id="datenschutz" class="help-section">
+        <h2>Daten &amp; Sicherheit</h2>
+        <ul>
+          <li><strong>Nur du siehst deine Daten.</strong> Jeder Account hat einen eigenen, privaten Speicher. Andere Nutzer haben keinen Zugriff.</li>
+          <li><strong>Passwörter</strong> werden nie im Klartext gespeichert, sondern nur als Hash, aus dem sich das Passwort nicht zurückrechnen lässt.</li>
+          <li><strong>Die Anmeldung</strong> läuft über ein geschütztes Cookie, das nur über HTTPS übertragen wird und nach 7 Tagen abläuft.</li>
+          <li><strong>Gespeichert</strong> wird auf Servern von Vercel in Frankfurt.</li>
+          <li><strong>Löschen:</strong> <em>Profil → Account löschen</em> entfernt alles endgültig.</li>
+        </ul>
+      </section>
+
+      <!-- Projekt -->
+      <section id="projekt" class="help-section">
+        <h2>Über das Projekt</h2>
+        <p>Der Budget Planner ist ein Projekt der Lehrveranstaltung <em>Einführung in Software Engineering</em> an der FH Technikum Wien
+          (BSc Wirtschaftsinformatik, WS 26/27). Er ist ein Prototyp: Er deckt die im Projekt definierten Anforderungen ab, ist aber nicht für den Produktiveinsatz gedacht.</p>
+        <p class="help-meta">Technik: HTML, CSS und JavaScript ohne Framework, Serverless Functions und Blob Storage auf Vercel. Stand: September 2026.</p>
+      </section>
+
+      <div class="help-end">
+        <a class="btn-action expense" href="/">Zur App</a>
+        <a class="card-link" href="#ueberblick">Nach oben</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

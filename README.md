@@ -3,6 +3,9 @@
 FH-Projekt für **Einführung in Software Engineering** (FH Technikum Wien, WS 26/27).
 Webbasierter Finanzplaner mit Login: Einnahmen und Ausgaben erfassen, Kategorien mit Budget, Gehalt und Fixkosten werden jeden Monat automatisch gebucht, Warnung bei Budgetüberschreitung.
 
+- **Live:** https://budget-planner-fh.vercel.app
+- **Anleitung für Nutzer:** https://budget-planner-fh.vercel.app/hilfe (Quelle: [`public/hilfe.html`](public/hilfe.html)), erklärt alle Funktionen, die Berechnungen und häufige Fragen.
+
 ## Stack
 
 - Frontend: HTML, CSS, JavaScript (ES Modules, kein Framework, kein Build-Step), in `public/`
