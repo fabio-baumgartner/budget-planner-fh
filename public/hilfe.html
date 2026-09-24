@@ -32,6 +32,7 @@
           <li><a href="#ueberblick">Überblick</a></li>
           <li><a href="#erste-schritte">Erste Schritte</a></li>
           <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#auswertungen">Auswertungen</a></li>
           <li><a href="#buchungen">Buchungen erfassen</a></li>
           <li><a href="#finance">Finance Manager</a></li>
           <li><a href="#wiederkehrend">Gehalt &amp; Fixkosten</a></li>
@@ -112,27 +113,46 @@
       <!-- Dashboard -->
       <section id="dashboard" class="help-section">
         <h2>Dashboard</h2>
-        <p>Das Dashboard ist deine Startseite. Oben rechts wählst du den Monat: mit den Pfeilen vor und zurück, ein Klick auf den Monatsnamen bringt dich zurück zum aktuellen Monat.</p>
+        <p>Das Dashboard ist deine Startseite und beantwortet drei Fragen: <strong>Wie viel habe ich noch? Komme ich durch den Monat? Wofür geht mein Geld weg?</strong>
+          Oben rechts wählst du den Monat: mit den Pfeilen vor und zurück, ein Klick auf den Monatsnamen bringt dich zurück zum aktuellen Monat.</p>
         <dl class="help-list">
           <dt>Noch verfügbar</dt>
-          <dd>Die große schwarze Karte. Sie zeigt, wie viel Geld dir in diesem Monat noch bleibt, inklusive Übertrag aus dem Vormonat.
-            Darunter siehst du, wie viel das ungefähr pro Tag bis Monatsende ist, und einen Balken: wie viel vom Budget schon ausgegeben ist.
+          <dd>Die große schwarze Karte zeigt, wie viel Geld dir in diesem Monat noch bleibt. Das kleine <em>i</em> daneben erklärt die Zahl, zum Beispiel wie viel davon Übertrag aus dem Vormonat ist.
             Ist die Zahl negativ, steht dort <em>Im Minus</em>.</dd>
-          <dt>Ausgaben nach Kategorie</dt>
-          <dd>Der Ring zeigt pro Kategorie zwei Dinge: hell das geplante Budget, kräftig das bereits Ausgegebene.
-            Die Legende daneben zeigt Betrag und Anteil an allen Ausgaben des Monats.</dd>
+          <dt>Statuszeile</dt>
+          <dd>Direkt unter dem Betrag sagt dir <strong>eine</strong> Zeile, ob du durch den Monat kommst:
+            <span class="help-ok">✓ Im Plan</span>, <span class="help-warn">! Knapp</span> oder <span class="help-red">! über Budget</span>.
+            Sie beruht auf der Prognose. Ein Tipp darauf öffnet die Details unter <a href="#auswertungen">Auswertungen</a>.
+            Ist das Budget schon überschritten, führt ein Tipp direkt zu <em>Budget anpassen</em>.</dd>
+          <dt>Balken und Tageszahl</dt>
+          <dd>Der Balken zeigt, wie viel vom Budget schon ausgegeben ist. Darunter steht, wie viel du ab heute <strong>pro Tag</strong> noch ausgeben kannst, ohne das Budget zu überschreiten.</dd>
+          <dt>Kategorien</dt>
+          <dd>Der kleine Ring zeigt pro Kategorie hell das geplante Budget und kräftig das bereits Ausgegebene. Daneben steht jede Kategorie mit Balken und
+            wie viel noch übrig ist. Grau heißt alles gut, <span class="help-warn">gelb</span> heißt knapp (ab deiner Warnschwelle, standardmäßig 90 %),
+            <span class="help-red">rot</span> heißt überschritten. Antippen öffnet die Kategorie zum Bearbeiten.</dd>
+          <dt>Letzte Buchungen</dt>
+          <dd>Die vier neuesten Buchungen des Monats. Antippen öffnet die Buchung zum Bearbeiten, <em>Alle ansehen</em> führt zum Finance Manager.</dd>
+          <dt>Letzte 6 Monate</dt>
+          <dd>Grüne Balken sind Einnahmen, violette Ausgaben, ein rotes <span class="help-over">!</span> markiert Monate über Budget.
+            Tippe auf einen Monat, um direkt dorthin zu springen. Die ausführliche Version steht unter <a href="#auswertungen">Auswertungen</a>.</dd>
+        </dl>
+      </section>
+
+      <!-- Auswertungen -->
+      <section id="auswertungen" class="help-section">
+        <h2>Auswertungen</h2>
+        <p>Hier stehen die Details, die auf dem Dashboard bewusst fehlen, damit es übersichtlich bleibt.</p>
+        <dl class="help-list">
           <dt>Prognose Monatsende</dt>
-          <dd>Nur im laufenden Monat. Sie schätzt, wie viel du bis Monatsende ausgeben wirst, und sagt dir, ob du damit
-            <em>im Plan</em>, <em>knapp</em> oder <em>über Budget</em> bist. Dazu: wie viel pro Tag noch drin ist, ohne das Budget zu sprengen.
+          <dd>Nur im laufenden Monat. Sie schätzt, wie viel du bis Monatsende ausgeben wirst: ein Balken mit dem bisher Ausgegebenen, der Prognose (schraffiert) und deinem Limit,
+            dazu ein Satz, ob du <em>im Plan</em>, <em>knapp</em> oder <em>über Budget</em> bist, was pro Tag noch drin ist und was am Monatsende voraussichtlich übrig bleibt.
             Wie die Schätzung entsteht, steht unter <a href="#rechnung">So wird gerechnet</a>.</dd>
           <dt>Verlauf · 6 Monate</dt>
-          <dd>Grüne Balken sind Einnahmen, violette Ausgaben. Die gestrichelte Linie ist das Budget-Limit des Monats, ein rotes <span class="help-over">!</span> markiert Monate über Budget.
-            Tippe auf einen Monat, um direkt dorthin zu springen. Darunter: durchschnittliche Einnahmen und Ausgaben sowie deine Sparquote.</dd>
-          <dt>Kategorien</dt>
-          <dd>Jede Karte zeigt, wie viel in der Kategorie noch übrig ist. Grau heißt alles gut, <span class="help-warn">gelb</span> heißt knapp
-            (ab deiner Warnschwelle, standardmäßig 90 %), <span class="help-red">rot</span> heißt überschritten.</dd>
-          <dt>Letzte Buchungen</dt>
-          <dd>Die sechs neuesten Buchungen des Monats. Antippen öffnet die Buchung zum Bearbeiten, <em>Alle ansehen</em> führt zum Finance Manager.</dd>
+          <dd>Einnahmen und Ausgaben der letzten sechs Monate mit Achse. Die gestrichelte Linie ist das Budget-Limit des Monats.
+            Darunter stehen die durchschnittlichen Einnahmen und Ausgaben und deine Sparquote. Tippe auf einen Monat, um dorthin zu springen.</dd>
+          <dt>Kategorien im Detail</dt>
+          <dd>Eine Tabelle mit allen Zahlen pro Kategorie: Budget, ausgegeben, übrig und Anteil an deinen Ausgaben, dazu eine Gesamtzeile.
+            Buchungen ohne Kategorie stehen in einer eigenen Zeile.</dd>
         </dl>
       </section>
 
@@ -249,7 +269,8 @@
       <section id="handy" class="help-section">
         <h2>Am Handy</h2>
         <ul>
-          <li>Die Navigation (Dashboard, Finance Manager, Profil) ist unten am Bildschirm.</li>
+          <li>Die Navigation (Dashboard, Finance Manager, Auswertungen, Profil) ist unten am Bildschirm.</li>
+          <li>Das kleine <em>i</em> neben einer Zahl zeigt beim Antippen eine kurze Erklärung.</li>
           <li><em>+</em> und <em>−</em> oben rechts legen eine Einnahme oder Ausgabe an.</li>
           <li>Dialoge öffnen sich von unten und schließen sich per <em>×</em> oder mit einem Tipp daneben.</li>
           <li>Tipp: Über „Zum Startbildschirm hinzufügen“ in deinem Browser liegt die App wie eine normale App auf dem Handy.</li>
@@ -271,7 +292,8 @@
           </details>
           <details>
             <summary>Warum sehe ich keine Prognose?</summary>
-            <p>Die Prognose gibt es nur für den laufenden Monat. Für vergangene Monate stehen die echten Zahlen fest, für zukünftige gibt es noch keine Daten.</p>
+            <p>Die ausführliche Prognose steht unter <em>Auswertungen</em>, auf dem Dashboard siehst du nur die Statuszeile daraus.
+              Sie gibt es nur für den laufenden Monat. Für vergangene Monate stehen die echten Zahlen fest, für zukünftige gibt es noch keine Daten.</p>
           </details>
           <details>
             <summary>Die Prognose am Monatsanfang wirkt komisch.</summary>

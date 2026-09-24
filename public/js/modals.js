@@ -2,7 +2,7 @@
 import { getDoc, update, newId } from './store.js';
 import { monthSummary, shouldNotifyOverBudget, categoryBudgetTotal, monthOf } from './calc.js';
 import { openModal, confirmModal, toast } from './ui.js';
-import { esc, money, currencySymbol, parseAmount, amountInputValue, monthLabel, todayIso, tint, initial } from './format.js';
+import { esc, moneyWithSymbol, currencySymbol, parseAmount, amountInputValue, monthLabel, todayIso, tint, initial } from './format.js';
 
 const PALETTE = ['#26C839', '#2E7CF6', '#E8A400', '#8B5CF6', '#145F1E', '#808080', '#0EA5A5', '#D9538A'];
 
@@ -369,7 +369,7 @@ export function openBudgetModal(month) {
     body: `
       <form novalidate style="display:contents">
         ${amountField(override ?? categoryTotal, cur)}
-        <p class="modal-text" style="font-size:13px">Obergrenze für deine Ausgaben in diesem Monat. Ohne eigenen Wert gilt die Summe deiner Kategorie-Budgets: <strong>${currencySymbol(cur)} ${money(categoryTotal, cur)}</strong>.</p>
+        <p class="modal-text" style="font-size:13px">Obergrenze für deine Ausgaben in diesem Monat. Ohne eigenen Wert gilt die Summe deiner Kategorie-Budgets: <strong>${moneyWithSymbol(categoryTotal, cur)}</strong>.</p>
         <p class="form-error" role="alert" hidden></p>
         <div class="modal-actions">
           <button type="submit" class="btn-primary">Budget speichern</button>

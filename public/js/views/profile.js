@@ -1,5 +1,5 @@
 import { categoryBudgetTotal } from '../calc.js';
-import { esc, money, currencySymbol, memberSince, monthLabel, initial } from '../format.js';
+import { esc, moneyWithSymbol, memberSince, monthLabel, initial } from '../format.js';
 import { icons } from '../icons.js';
 import { pageHead } from './shared.js';
 
@@ -84,8 +84,8 @@ export function renderProfile({ doc, month, summary }) {
           <button type="button" class="budget-card" data-action="edit-budget">
             <div>
               <small>Monatsbudget ${esc(monthLabel(month))}</small>
-              <strong>${currencySymbol(cur)} ${money(summary.limit, cur)}</strong>
-              <small>${isOverride ? 'Eigener Wert für diesen Monat' : `Summe der Kategorie-Budgets (${money(categoryBudgetTotal(doc), cur)})`}</small>
+              <strong>${moneyWithSymbol(summary.limit, cur)}</strong>
+              <small>${isOverride ? 'Eigener Wert für diesen Monat' : `Summe der Kategorie-Budgets (${moneyWithSymbol(categoryBudgetTotal(doc), cur)})`}</small>
             </div>
             <span class="hero-chip">Anpassen</span>
           </button>

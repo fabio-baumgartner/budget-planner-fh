@@ -1,6 +1,7 @@
 // Formatierung von Geld, Datum und Text für die Anzeige.
 
-const LOCALE_BY_CURRENCY = { EUR: 'de-AT', CHF: 'de-CH', USD: 'en-US' };
+// EUR mit de-DE, weil de-AT im Browser ein Leerzeichen als Tausendertrennzeichen nutzt (2 221 statt 2.221).
+const LOCALE_BY_CURRENCY = { EUR: 'de-DE', CHF: 'de-CH', USD: 'en-US' };
 const SYMBOL = { EUR: '€', CHF: 'CHF', USD: '$' };
 
 export function currencySymbol(currency) {
@@ -20,8 +21,8 @@ export function moneyWithSymbol(amount, currency, decimals = 0) {
   return currency === 'USD' ? `$${value}` : `${value} ${currencySymbol(currency)}`;
 }
 
-export function signedMoney(amount, type, currency) {
-  return `${type === 'income' ? '+' : '−'}${moneyWithSymbol(amount, currency, 2)}`;
+export function signedMoney(amount, type, currency, decimals = 2) {
+  return `${type === 'income' ? '+' : '−'}${moneyWithSymbol(amount, currency, decimals)}`;
 }
 
 // "12,50" oder "12.50" oder "1.234,5" -> 12.5; ungültig -> NaN

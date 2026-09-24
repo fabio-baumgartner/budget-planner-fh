@@ -1,6 +1,39 @@
-// Auswertungs-Karten im Dashboard: Prognose Monatsende und Verlauf der letzten 6 Monate.
+// Auswertungs-Karten: Prognose Monatsende, Verlauf der letzten 6 Monate (ausführlich und als Mini-Version).
 import { history } from '../calc.js';
 import { esc, moneyWithSymbol, monthLabel, monthShort, dateLabel } from '../format.js';
+
+// ---------- Mini-Verlauf fürs Dashboard: nur Balken, keine Achse, keine Kennzahlen ----------
+
+export function miniTrendCard(doc, month, cur) {
+  const h = history(doc, month, 6);
+  const peak = Math.max(1, ...h.months.flatMap((m) => [m.income, m.expenses]));
+  const pct = (v) => ((v / peak) * 100).toFixed(1);
+
+  const bars = h.months
+    .map((m) => {
+      const label = `${monthLabel(m.month)}: Einnahmen ${moneyWithSymbol(m.income, cur)}, Ausgaben ${moneyWithSymbol(m.expenses, cur)}${m.over ? ', über Budget' : ''}`;
+      return `
+        <button type="button" class="mini-month ${m.month === month ? 'is-selected' : ''}" data-action="select-month" data-month="${m.month}"
+          title="${esc(label)}" aria-label="${esc(label)}">
+          <span class="pair">
+            ${m.hasData ? `<span class="b in" style="height:${pct(m.income)}%"></span><span class="b out" style="height:${pct(m.expenses)}%"></span>` : ''}
+            ${m.over ? '<span class="chart-over flag" aria-hidden="true">!</span>' : ''}
+          </span>
+          <small>${esc(monthShort(m.month))}</small>
+        </button>`;
+    })
+    .join('');
+
+  return `
+    <section class="card mini-trend dash-trend" aria-label="Letzte 6 Monate">
+      <div class="card-head">
+        <h2 class="card-title">Letzte 6 Monate</h2>
+        <a class="card-link" href="#auswertungen">Zur Auswertung</a>
+      </div>
+      <div class="chart-key" aria-hidden="true"><span><i class="k-income"></i>Einnahmen</span><span><i class="k-expense"></i>Ausgaben</span></div>
+      <div class="mini-bars">${bars}</div>
+    </section>`;
+}
 
 // ---------- Prognose Monatsende ----------
 
@@ -31,7 +64,7 @@ export function forecastCard(f, cur) {
   const basis = `Basis: ${days} dieses Monats${past}. Fixkosten und geplante Buchungen werden nicht hochgerechnet.`;
 
   return `
-    <section class="card forecast-card dash-forecast" aria-label="Prognose Monatsende">
+    <section class="card forecast-card" aria-label="Prognose Monatsende">
       <div class="card-head">
         <h2 class="card-title">Prognose Monatsende</h2>
         <span class="status-chip ${f.status}"><span aria-hidden="true">${status.icon}</span>${status.label}</span>
@@ -116,7 +149,7 @@ export function trendCard(doc, month, cur) {
     .join('');
 
   return `
-    <section class="card trend-card dash-trend" aria-label="Verlauf der letzten 6 Monate">
+    <section class="card trend-card" aria-label="Verlauf der letzten 6 Monate">
       <div class="card-head">
         <h2 class="card-title">Verlauf · 6 Monate</h2>
         <div class="chart-key" aria-hidden="true">

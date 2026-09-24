@@ -502,61 +502,413 @@ input:focus {
    Dashboard
    ========================================================= */
 
-/* Die Prognose gibt es nur im laufenden Monat (.has-forecast), sonst nimmt der Verlauf ihren Platz ein. */
+/* Vier Karten: Hero + Kategorien oben, Buchungen + Mini-Verlauf unten.
+   Am Handy untereinander in dieser Reihenfolge. */
 .dash {
   display: grid;
   gap: 20px;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'hero' 'donut' 'trend' 'recent' 'cats';
 }
 
-.dash.has-forecast {
-  grid-template-areas: 'hero' 'forecast' 'donut' 'trend' 'recent' 'cats';
-}
-
-.dash-hero {
-  grid-area: hero;
-}
-.dash-donut {
-  grid-area: donut;
-}
-.dash-forecast {
-  grid-area: forecast;
-}
-.dash-trend {
-  grid-area: trend;
-}
-.dash-recent {
-  grid-area: recent;
-}
-.dash-cats {
-  grid-area: cats;
-}
-
-@container main (min-width: 820px) {
+@container main (min-width: 860px) {
   .dash {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas: 'hero donut' 'trend trend' 'cats cats' 'recent recent';
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: stretch;
   }
-  .dash.has-forecast {
-    grid-template-areas: 'hero donut' 'forecast trend' 'cats cats' 'recent recent';
-  }
+}
+
+/* Auswertungen: Prognose + Verlauf nebeneinander, Tabelle darunter über die volle Breite */
+.ana {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 @container main (min-width: 1000px) {
-  .dash {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: 'hero donut donut' 'trend trend trend' 'cats cats recent';
+  .ana.has-forecast {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
     align-items: start;
   }
-  .dash.has-forecast {
-    grid-template-areas: 'hero donut donut' 'forecast trend trend' 'cats cats recent';
+  .ana .full {
+    grid-column: 1 / -1;
   }
-  .dash-hero,
-  .dash-donut,
-  .dash-forecast,
-  .dash-trend {
-    align-self: stretch;
+}
+
+/* Hero: eine Statuszeile und eine Tageszahl */
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.75;
+}
+
+.info:hover {
+  opacity: 1;
+}
+
+.hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  max-width: 100%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px 7px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+}
+
+a.hero-status:hover,
+button.hero-status:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hero-status .dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.hero-status.ok .dot {
+  background: var(--green);
+  color: #fff;
+}
+
+.hero-status.tight .dot {
+  background: #f5c44e;
+  color: #3d2c00;
+}
+
+.hero-status.over .dot,
+.hero-status.hint .dot {
+  background: #fff;
+  color: var(--text);
+}
+
+body.is-over .hero-status.over .dot {
+  color: var(--red);
+}
+
+.hero-daily {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 16px;
+  font-size: 13px;
+}
+
+.hero-daily span {
+  opacity: 0.8;
+}
+
+.hero-daily strong {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Kategorien: kleiner Donut + Liste */
+.cats-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cats-body {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  flex: 1;
+}
+
+.cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cat-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) minmax(56px, 120px) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.cat-item:hover {
+  background: var(--soft);
+}
+
+.cat-item .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.cat-item .name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-item .track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.cat-item .track span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 480ms;
+}
+
+.cat-item .rest {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  text-align: right;
+  min-width: 80px;
+}
+
+.cat-item .rest.warn {
+  color: var(--warn);
+}
+
+.cat-item .rest.over {
+  color: var(--red);
+  font-weight: 600;
+}
+
+@container main (max-width: 560px) {
+  .cats-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cats-body .donut {
+    align-self: center;
+  }
+  .cat-item {
+    grid-template-columns: 10px minmax(0, 1fr) 64px auto;
+    gap: 10px;
+  }
+}
+
+.empty-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.empty-add svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Mini-Verlauf */
+.mini-trend {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mini-bars {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  height: 140px;
+  margin-top: auto;
+}
+
+.mini-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-width: 0;
+}
+
+.mini-month .pair {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  border-radius: 8px 8px 0 0;
+  transition: background 160ms;
+}
+
+.mini-month:hover .pair,
+.mini-month.is-selected .pair {
+  background: rgba(10, 10, 10, 0.035);
+}
+
+.mini-month .b {
+  width: clamp(6px, 26%, 16px);
+  border-radius: 4px 4px 0 0;
+}
+
+.mini-month .b.in {
+  background: var(--chart-income);
+}
+
+.mini-month .b.out {
+  background: var(--chart-expense);
+}
+
+.mini-month .flag {
+  position: absolute;
+  top: -4px;
+  right: 14%;
+}
+
+.mini-month small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.mini-month.is-selected small {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Kategorien im Detail (Auswertungen) */
+.table-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 -24px -24px;
+}
+
+.cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.cat-table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 400;
+  text-align: right;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.cat-table td {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cat-table th:first-child,
+.cat-table td:first-child {
+  text-align: left;
+}
+
+.cat-table tr.total td {
+  border-bottom: none;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cat-table .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+.cat-table .over {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.table-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+}
+
+.table-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .table-scroll {
+    margin: 0 -20px -20px;
+  }
+  .cat-table th,
+  .cat-table td {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
@@ -954,11 +1306,6 @@ input:focus {
   overflow-wrap: anywhere;
 }
 
-.hero-sub {
-  margin-top: 8px;
-  font-size: 13px;
-  opacity: 0.75;
-}
 
 .hero-bottom {
   display: flex;
@@ -989,71 +1336,13 @@ input:focus {
   opacity: 0.8;
 }
 
-.hero-hint {
-  font-size: 13px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
-  padding: 10px 12px 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
 
-.hero-hint button {
-  border: none;
-  background: #fff;
-  color: var(--text);
-  border-radius: var(--radius-pill);
-  padding: 7px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
 
-/* Donut */
-.donut-card {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.donut-key {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--text-3);
-}
-
-.donut-key span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.donut-key i {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: #2e2e2e;
-}
-
-.donut-key i.faint {
-  opacity: 0.22;
-}
-
-.donut-body {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  flex: 1;
-}
-
+/* Donut (klein, in der Kategorien-Karte) */
 .donut {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   flex-shrink: 0;
 }
 
@@ -1085,76 +1374,13 @@ input:focus {
 }
 
 .donut-center strong {
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 body.is-over .donut-center strong {
   color: var(--red);
-}
-
-.legend {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px 24px;
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.legend li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-2);
-  min-width: 0;
-}
-
-.legend .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-pill);
-  flex-shrink: 0;
-}
-
-.legend .name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.legend .amount {
-  color: var(--muted);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.legend strong {
-  font-weight: 600;
-  color: var(--text);
-  min-width: 36px;
-  text-align: right;
-}
-
-@container main (min-width: 1000px) {
-  .legend {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container main (max-width: 520px) {
-  .donut-body {
-    flex-direction: column;
-  }
-  .legend {
-    width: 100%;
-  }
 }
 
 /* Letzte Buchungen */
@@ -1166,9 +1392,8 @@ body.is-over .donut-center strong {
 }
 
 .recent-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
-  column-gap: 16px;
+  display: flex;
+  flex-direction: column;
   margin: 0 -12px;
 }
 
@@ -1212,46 +1437,7 @@ body.is-over .donut-center strong {
   white-space: nowrap;
 }
 
-/* Kategorien */
-.cat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
-  gap: 14px;
-}
-
-.cat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  text-align: left;
-  width: 100%;
-  min-width: 0;
-  transition: border-color 160ms, box-shadow 160ms;
-}
-
-.cat-card:hover {
-  border-color: #dcdcdc;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.cat-card.add {
-  justify-content: center;
-  border-style: dashed;
-  color: var(--text-3);
-  font-weight: 600;
-  min-height: 78px;
-  background: transparent;
-}
-
-.cat-card.add svg {
-  width: 16px;
-  height: 16px;
-}
-
+/* Kategorie-Icons (Buchungslisten, Dialoge) */
 .cat-icon {
   width: 44px;
   height: 44px;
@@ -1277,69 +1463,6 @@ body.is-over .donut-center strong {
   font-size: 20px;
 }
 
-.cat-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.cat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.cat-name {
-  font-size: 14px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.cat-state {
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  color: var(--muted);
-}
-
-.cat-state.warn {
-  color: var(--warn);
-}
-
-.cat-state.over {
-  color: var(--red);
-}
-
-.cat-track {
-  display: block;
-  height: 5px;
-  border-radius: var(--radius-pill);
-  background: var(--line);
-  overflow: hidden;
-}
-
-.cat-bar {
-  display: block;
-  height: 100%;
-  border-radius: var(--radius-pill);
-  transition: width 480ms;
-}
-
-.cat-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--muted);
-}
-
 /* =========================================================
    Buttons
    ========================================================= */
@@ -1363,6 +1486,12 @@ body.is-over .donut-center strong {
 .btn svg {
   width: 14px;
   height: 14px;
+}
+
+.btn.sm {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .btn:hover {
@@ -2709,6 +2838,11 @@ a.setting {
 
 .help-warn {
   color: #8a6100;
+  font-weight: 600;
+}
+
+.help-ok {
+  color: var(--green-deep);
   font-weight: 600;
 }
 

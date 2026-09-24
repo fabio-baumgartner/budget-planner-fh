@@ -8,6 +8,7 @@ import { toast, confirmModal, closeModal } from './ui.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderFinance } from './views/finance.js';
 import { renderProfile } from './views/profile.js';
+import { renderAnalysis } from './views/analysis.js';
 import {
   openTransactionModal,
   openCategoryModal,
@@ -21,6 +22,7 @@ import {
 const VIEWS = {
   dashboard: { label: 'Dashboard', icon: icons.dashboard, render: renderDashboard },
   finance: { label: 'Finance Manager', icon: icons.finance, render: renderFinance },
+  auswertungen: { label: 'Auswertungen', icon: icons.analysis, render: renderAnalysis },
   profile: { label: 'Profil', icon: icons.profile, render: renderProfile },
 };
 
@@ -129,6 +131,8 @@ const actions = {
   'next-month': () => setMonth(addMonths(ui.month, 1)),
   'current-month': () => setMonth(monthOf(todayIso())),
   'select-month': ({ month }) => setMonth(month),
+  // ⓘ-Erklärungen: per Tipp als Meldung, damit sie auch am Handy lesbar sind
+  info: ({ text }) => toast(text, 'info', 6000),
 
   'toggle-carry': () => {
     const on = getDoc().settings.carryOver === false;
