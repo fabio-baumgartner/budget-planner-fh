@@ -83,7 +83,9 @@ function render() {
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
-  document.getElementById('header-avatar').textContent = initial(doc.profile.name);
+  document.querySelectorAll('[data-user-initial]').forEach((el) => (el.textContent = initial(doc.profile.name)));
+  document.querySelectorAll('[data-user-name]').forEach((el) => (el.textContent = doc.profile.name));
+  document.querySelectorAll('[data-user-email]').forEach((el) => (el.textContent = doc.profile.email));
   document.title = `${VIEWS[ui.view].label} · Budget Planner`;
 
   document.getElementById('view').innerHTML = VIEWS[ui.view].render({
@@ -100,9 +102,10 @@ let lastSaveState = 'saved';
 
 function renderSaveState(state) {
   const labels = { pending: 'Ungespeichert', saving: 'Speichert …', saved: 'Gespeichert', error: 'Speichern fehlgeschlagen' };
-  const el = document.getElementById('save-state');
-  el.textContent = labels[state] || '';
-  el.style.color = state === 'error' ? 'var(--red)' : '';
+  document.querySelectorAll('[data-save-state]').forEach((el) => {
+    el.textContent = labels[state] || '';
+    el.classList.toggle('error', state === 'error');
+  });
   // Nur beim ersten Fehler melden, nicht bei jedem neuen Versuch.
   if (state === 'error' && lastSaveState !== 'error') toast('Speichern fehlgeschlagen. Neuer Versuch in 5 Sekunden.', 'error');
   if (state === 'saved' && lastSaveState === 'error') toast('Wieder gespeichert', 'success');

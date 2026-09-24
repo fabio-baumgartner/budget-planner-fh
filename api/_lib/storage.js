@@ -11,6 +11,8 @@ if (!useBlob) {
     throw new Error('Kein Blob-Store verbunden (BLOB_STORE_ID oder BLOB_READ_WRITE_TOKEN fehlt).');
   }
   console.warn('[storage] Kein Blob-Store konfiguriert: speichere lokal in .data/ (Wegwerfdaten, nur für Entwicklung).');
+} else if (!process.env.VERCEL) {
+  console.warn('[storage] ACHTUNG: Lokaler Server ist mit dem echten Vercel Blob Store verbunden (Produktionsdaten).');
 }
 
 export async function getJSON(pathname) {

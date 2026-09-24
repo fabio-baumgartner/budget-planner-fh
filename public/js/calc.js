@@ -115,12 +115,16 @@ export function categoryRows(doc, summary) {
 
 // Legende: Anteil jeder Kategorie an allen Ausgaben des Monats.
 export function legendRows(doc, summary) {
-  return doc.categories.map((c) => ({
-    id: c.id,
-    name: c.name,
-    color: c.color,
-    pct: summary.expenses ? Math.round(((summary.spentByCategory[c.id] || 0) / summary.expenses) * 100) : 0,
-  }));
+  return doc.categories.map((c) => {
+    const spent = round(summary.spentByCategory[c.id] || 0);
+    return {
+      id: c.id,
+      name: c.name,
+      color: c.color,
+      spent,
+      pct: summary.expenses ? Math.round((spent / summary.expenses) * 100) : 0,
+    };
+  });
 }
 
 // Donut: pro Kategorie ein heller Bogen (Budget) und darüber ein voller Bogen (ausgegeben, max. Budget).
