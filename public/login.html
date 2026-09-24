@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Anmelden · Budget Planner</title>
+  <meta name="theme-color" content="#FAFAFA">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script type="module" src="/js/auth.js"></script>
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="brand">
+        <div class="brand-logo">B</div>
+        <span>Budget Planner</span>
+      </div>
+
+      <div class="auth-intro">
+        <h1 id="auth-title">Willkommen <span>zurück</span></h1>
+        <p id="auth-sub">Melde dich an, um dein Budget zu sehen.</p>
+      </div>
+
+      <div class="segmented" role="tablist">
+        <button type="button" class="active" data-mode="login" role="tab" aria-selected="true">Anmelden</button>
+        <button type="button" data-mode="register" role="tab" aria-selected="false">Registrieren</button>
+      </div>
+
+      <form class="auth-form" id="auth-form" novalidate>
+        <div class="field" id="name-field" hidden>
+          <label class="field-label" for="name">Name</label>
+          <input class="input" id="name" name="name" autocomplete="name" maxlength="60" placeholder="z. B. Fabio">
+        </div>
+        <div class="field">
+          <label class="field-label" for="email">E-Mail</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="du@beispiel.at">
+        </div>
+        <div class="field">
+          <label class="field-label" for="password">Passwort</label>
+          <input class="input" id="password" name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Mindestens 8 Zeichen">
+        </div>
+        <p class="form-error" id="auth-error" role="alert" hidden></p>
+        <button class="btn-primary" type="submit" id="auth-submit">Anmelden</button>
+      </form>
+
+      <p class="auth-foot">FH Technikum Wien · Einführung in Software Engineering</p>
+    </div>
+  </main>
+</body>
+</html>

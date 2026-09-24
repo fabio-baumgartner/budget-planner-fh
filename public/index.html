@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Budget Planner</title>
+  <meta name="theme-color" content="#FAFAFA">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="#dashboard" aria-label="Budget Planner, zum Dashboard">
+        <div class="brand-logo">B</div>
+        <span>Budget Planner</span>
+      </a>
+      <nav class="nav" aria-label="Hauptnavigation" data-nav></nav>
+      <div class="header-actions">
+        <span class="save-state" id="save-state" aria-live="polite"></span>
+        <div class="quick-actions">
+          <button type="button" class="icon-btn accent" data-action="add-income" title="Einnahme hinzufügen" aria-label="Einnahme hinzufügen" data-icon="plus"></button>
+          <button type="button" class="icon-btn" data-action="add-expense" title="Ausgabe hinzufügen" aria-label="Ausgabe hinzufügen" data-icon="minus"></button>
+        </div>
+        <a class="avatar header-avatar" href="#profile" id="header-avatar" aria-label="Profil"></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main" id="view">
+    <div class="loading">Lade dein Budget …</div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Hauptnavigation" data-nav></nav>
+
+  <div id="modal-root"></div>
+  <div class="toasts" id="toasts"></div>
+</body>
+</html>
