@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Hilfe &amp; Anleitung · Budget Planner</title>
   <meta name="description" content="Anleitung zum Budget Planner: erste Schritte, alle Funktionen, wie gerechnet wird und häufige Fragen.">
-  <meta name="theme-color" content="#FAFAFA">
+  <meta name="theme-color" content="#FFF8EC">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="help-page">
@@ -71,7 +71,7 @@
           <div class="help-feature">
             <span class="help-feature-icon warn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17"/></svg></span>
             <strong>Warnung bei Überschreitung</strong>
-            <p>Kategorien werden gelb, wenn es knapp wird, und die ganze App wird rot, wenn dein Budget überschritten ist.</p>
+            <p>Die App wird gelb, wenn es knapp wird, und rot, wenn dein Budget überschritten ist. Kategorien bekommen dann einen Hinweis.</p>
           </div>
         </div>
       </section>
@@ -117,7 +117,8 @@
           Oben rechts wählst du den Monat: mit den Pfeilen vor und zurück, ein Klick auf den Monatsnamen bringt dich zurück zum aktuellen Monat.</p>
         <dl class="help-list">
           <dt>Noch verfügbar</dt>
-          <dd>Die große schwarze Karte zeigt, wie viel Geld dir in diesem Monat noch bleibt. Das kleine <em>i</em> daneben erklärt die Zahl, zum Beispiel wie viel davon Übertrag aus dem Vormonat ist.
+          <dd>Die große farbige Karte zeigt, wie viel Geld dir in diesem Monat noch bleibt. Ihre Farbe zeigt den Status:
+            grün heißt im Rahmen, <span class="help-warn">gelb</span> heißt knapp (ab deiner Warnschwelle), <span class="help-red">rot</span> heißt überschritten. Das kleine <em>i</em> daneben erklärt die Zahl, zum Beispiel wie viel davon Übertrag aus dem Vormonat ist.
             Ist die Zahl negativ, steht dort <em>Im Minus</em>.</dd>
           <dt>Statuszeile</dt>
           <dd>Direkt unter dem Betrag sagt dir <strong>eine</strong> Zeile, ob du durch den Monat kommst:
@@ -125,15 +126,16 @@
             Sie beruht auf der Prognose. Ein Tipp darauf öffnet die Details unter <a href="#auswertungen">Auswertungen</a>.
             Ist das Budget schon überschritten, führt ein Tipp direkt zu <em>Budget anpassen</em>.</dd>
           <dt>Balken und Tageszahl</dt>
-          <dd>Der Balken zeigt, wie viel vom Budget schon ausgegeben ist. Darunter steht, wie viel du ab heute <strong>pro Tag</strong> noch ausgeben kannst, ohne das Budget zu überschreiten.</dd>
+          <dd>Der Balken zeigt, wie viel vom Budget schon ausgegeben ist. Darunter steht, wie viel du ab heute <strong>pro Tag</strong> noch ausgeben kannst, ohne das Budget zu überschreiten,
+            und die Summe deiner Einnahmen und Ausgaben im Monat.</dd>
           <dt>Kategorien</dt>
-          <dd>Der kleine Ring zeigt pro Kategorie hell das geplante Budget und kräftig das bereits Ausgegebene. Daneben steht jede Kategorie mit Balken und
-            wie viel noch übrig ist. Grau heißt alles gut, <span class="help-warn">gelb</span> heißt knapp (ab deiner Warnschwelle, standardmäßig 90 %),
-            <span class="help-red">rot</span> heißt überschritten. Antippen öffnet die Kategorie zum Bearbeiten.</dd>
+          <dd>Jede Kategorie ist eine eigene Kachel: Prozent vom Budget, ein Balken und wie viel noch übrig ist.
+            Ein <span class="help-warn">knapp</span>-Schild heißt, die Warnschwelle ist erreicht (standardmäßig 90 %),
+            <span class="help-red">drüber</span> heißt überschritten, dann wird der Balken rot. Antippen öffnet die Kategorie zum Bearbeiten.</dd>
           <dt>Letzte Buchungen</dt>
-          <dd>Die vier neuesten Buchungen des Monats. Antippen öffnet die Buchung zum Bearbeiten, <em>Alle ansehen</em> führt zum Finance Manager.</dd>
+          <dd>Die fünf neuesten Buchungen des Monats. Antippen öffnet die Buchung zum Bearbeiten, <em>Alle ansehen</em> führt zum Finance Manager.</dd>
           <dt>Letzte 6 Monate</dt>
-          <dd>Grüne Balken sind Einnahmen, violette Ausgaben, ein rotes <span class="help-over">!</span> markiert Monate über Budget.
+          <dd>Grüne Balken sind Einnahmen, schwarze Ausgaben, ein rotes <span class="help-over">!</span> markiert Monate über Budget.
             Tippe auf einen Monat, um direkt dorthin zu springen. Die ausführliche Version steht unter <a href="#auswertungen">Auswertungen</a>.</dd>
         </dl>
       </section>
@@ -208,7 +210,7 @@
           einen eigenen Wert festlegen und später wieder auf die Summe zurücksetzen.</p>
         <h3>Warnungen</h3>
         <ul>
-          <li><span class="help-warn">Gelb</span>: Eine Kategorie hat deine Warnschwelle erreicht (einstellbar von 75 bis 100 %).</li>
+          <li><span class="help-warn">Gelb</span>: Deine Ausgaben haben die Warnschwelle des Monatsbudgets erreicht, dann wird die App gelb. Bei einer einzelnen Kategorie erscheint ein <em>knapp</em>-Schild (Schwelle einstellbar von 75 bis 100 %).</li>
           <li><span class="help-red">Rot</span>: Die App färbt sich rot, sobald deine Ausgaben das Budget-Limit übersteigen oder dein verfügbares Geld unter null fällt.</li>
           <li>Beim ersten Überschreiten im Monat bekommst du zusätzlich eine Meldung, danach nicht bei jeder weiteren Ausgabe.</li>
         </ul>

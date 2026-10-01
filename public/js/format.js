@@ -86,7 +86,36 @@ export function tint(hex, alpha = 0.14) {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+// Kategoriefarben für die Anzeige: Kacheln und Icons tragen schwarze Schrift, brauchen also helle Flächen.
+// Gespeichert bleibt immer die Originalfarbe. Alte Standardfarben bekommen ein festes Pastell-Gegenstück,
+// andere dunkle Farben werden mit Weiß aufgehellt.
+const PASTEL_FOR = {
+  '#26C839': '#B8F2D0',
+  '#2E7CF6': '#BDE3FF',
+  '#E8A400': '#FFE58F',
+  '#8B5CF6': '#D9C8FF',
+  '#145F1E': '#FFC2B4',
+  '#808080': '#E6DFD3',
+  '#0EA5A5': '#A9E8E1',
+  '#D9538A': '#FFD0E8',
+};
+
+export function displayColor(hex) {
+  const color = String(hex || '').toUpperCase();
+  if (PASTEL_FOR[color]) return PASTEL_FOR[color];
+  if (!/^#[0-9A-F]{6}$/.test(color)) return '#E6DFD3';
+  const n = parseInt(color.slice(1), 16);
+  const rgb = [n >> 16, (n >> 8) & 255, n & 255];
+  const [r, g, b] = rgb.map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  if (0.2126 * r + 0.7152 * g + 0.0722 * b >= 0.55) return color;
+  const light = rgb.map((c) => Math.round(255 - (255 - c) * 0.35));
+  return `#${light.map((c) => c.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+const ESCAPES ={ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
 export function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]);

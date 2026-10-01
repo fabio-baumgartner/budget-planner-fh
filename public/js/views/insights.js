@@ -10,13 +10,13 @@ export function miniTrendCard(doc, month, cur) {
   const pct = (v) => ((v / peak) * 100).toFixed(1);
 
   const bars = h.months
-    .map((m) => {
+    .map((m, i) => {
       const label = `${monthLabel(m.month)}: Einnahmen ${moneyWithSymbol(m.income, cur)}, Ausgaben ${moneyWithSymbol(m.expenses, cur)}${m.over ? ', über Budget' : ''}`;
       return `
-        <button type="button" class="mini-month ${m.month === month ? 'is-selected' : ''}" data-action="select-month" data-month="${m.month}"
+        <button type="button" class="mini-month ${m.month === month ? 'is-selected' : ''}" style="--i:${i}" data-action="select-month" data-month="${m.month}"
           title="${esc(label)}" aria-label="${esc(label)}">
           <span class="pair">
-            ${m.hasData ? `<span class="b in" style="height:${pct(m.income)}%"></span><span class="b out" style="height:${pct(m.expenses)}%"></span>` : ''}
+            ${m.hasData ? `<span class="b in gy" style="height:${pct(m.income)}%"></span><span class="b out gy" style="height:${pct(m.expenses)}%"></span>` : ''}
             ${m.over ? '<span class="chart-over flag" aria-hidden="true">!</span>' : ''}
           </span>
           <small>${esc(monthShort(m.month))}</small>
@@ -25,10 +25,10 @@ export function miniTrendCard(doc, month, cur) {
     .join('');
 
   return `
-    <section class="card mini-trend dash-trend" aria-label="Letzte 6 Monate">
+    <section class="card trend-mini dash-trend" aria-label="Letzte 6 Monate">
       <div class="card-head">
         <h2 class="card-title">Letzte 6 Monate</h2>
-        <a class="card-link" href="#auswertungen">Zur Auswertung</a>
+        <a class="link" href="#auswertungen">Zur Auswertung →</a>
       </div>
       <div class="chart-key" aria-hidden="true"><span><i class="k-income"></i>Einnahmen</span><span><i class="k-expense"></i>Ausgaben</span></div>
       <div class="mini-bars">${bars}</div>
@@ -67,7 +67,7 @@ export function forecastCard(f, cur) {
     <section class="card forecast-card" aria-label="Prognose Monatsende">
       <div class="card-head">
         <h2 class="card-title">Prognose Monatsende</h2>
-        <span class="status-chip ${f.status}"><span aria-hidden="true">${status.icon}</span>${status.label}</span>
+        <span class="sticker ${f.status}"><span aria-hidden="true">${status.icon} </span>${status.label}</span>
       </div>
       <div>
         <div class="forecast-value">≈ ${moneyWithSymbol(f.projectedExpenses, cur)}</div>
@@ -75,14 +75,16 @@ export function forecastCard(f, cur) {
       </div>
       <div class="meter" role="img"
         aria-label="Bisher ${moneyWithSymbol(spentSoFar, cur)}, Prognose ${moneyWithSymbol(f.projectedExpenses, cur)}, Budget-Limit ${moneyWithSymbol(f.limit, cur)}">
-        <span class="meter-projected" style="width:${pct(f.projectedExpenses)}%"></span>
-        <span class="meter-spent" style="width:${pct(spentSoFar)}%"></span>
+        <div class="meter-track">
+          <span class="meter-projected gx" style="width:${pct(f.projectedExpenses)}%"></span>
+          <span class="meter-spent gx" style="width:${pct(spentSoFar)}%"></span>
+        </div>
         ${f.limit > 0 ? `<span class="meter-limit" style="left:${pct(f.limit)}%"></span>` : ''}
       </div>
-      <div class="meter-key" aria-hidden="true">
+      <div class="chart-key" aria-hidden="true">
         <span><i class="k-spent"></i>Bisher</span>
         <span><i class="k-projected"></i>Prognose</span>
-        ${f.limit > 0 ? '<span><i class="k-limit"></i>Limit</span>' : ''}
+        ${f.limit > 0 ? '<span><i class="k-marker"></i>Limit</span>' : ''}
       </div>
       <p class="forecast-text">${esc(sentence)}</p>
       <div class="mini-stats">
@@ -118,28 +120,28 @@ export function trendCard(doc, month, cur) {
   for (let v = 0; v <= max + step / 2; v += step) ticks.push(v);
 
   const groups = h.months
-    .map((m) => {
+    .map((m, i) => {
       const selected = m.month === month;
       const label =
         `${monthLabel(m.month)}: Einnahmen ${moneyWithSymbol(m.income, cur)}, Ausgaben ${moneyWithSymbol(m.expenses, cur)}, ` +
         `Budget-Limit ${moneyWithSymbol(m.limit, cur)}${m.over ? ', über Budget' : ''}`;
       return `
-        <button type="button" class="chart-group ${selected ? 'is-selected' : ''}" data-action="select-month" data-month="${m.month}"
+        <button type="button" class="chart-group ${selected ? 'is-selected' : ''}" style="--i:${i}" data-action="select-month" data-month="${m.month}"
           title="${esc(label)}" aria-label="${esc(label)}" ${selected ? 'aria-current="date"' : ''}>
           <span class="chart-bars">
-            <span class="bar-slot"><span class="bar income" style="height:${pct(m.income)}%"></span></span>
+            <span class="bar-slot"><span class="bar income gy" style="height:${pct(m.income)}%"></span></span>
             <span class="bar-slot">
-              <span class="bar expense" style="height:${pct(m.expenses)}%"></span>
+              <span class="bar expense gy" style="height:${pct(m.expenses)}%"></span>
               ${m.limit > 0 && m.hasData ? `<span class="chart-limit" style="bottom:${pct(m.limit)}%"></span>` : ''}
               ${m.over ? `<span class="chart-over" style="bottom:calc(${pct(m.expenses)}% + 6px)" aria-hidden="true">!</span>` : ''}
             </span>
           </span>
-          <span class="chart-label">${esc(monthShort(m.month))}</span>
+          <span class="chart-label"><span>${esc(monthShort(m.month))}</span></span>
         </button>`;
     })
     .join('');
 
-  const rate = h.savingsRate === null ? '–' : `${h.savingsRate < 0 ? '−' : ''}${Math.abs(Math.round(h.savingsRate * 100))} %`;
+  const rate = h.savingsRate === null ? 'k. A.' : `${h.savingsRate < 0 ? '−' : ''}${Math.abs(Math.round(h.savingsRate * 100))} %`;
   const rows = h.months
     .map(
       (m) =>
@@ -156,7 +158,7 @@ export function trendCard(doc, month, cur) {
           <span><i class="k-income"></i>Einnahmen</span>
           <span><i class="k-expense"></i>Ausgaben</span>
           <span><i class="k-limit"></i>Budget-Limit</span>
-          <span><i class="k-over">!</i>Über Budget</span>
+          <span><i class="chart-over k-over">!</i>Über Budget</span>
         </div>
       </div>
       <div class="chart">

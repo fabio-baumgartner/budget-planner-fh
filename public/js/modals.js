@@ -2,9 +2,10 @@
 import { getDoc, update, newId } from './store.js';
 import { monthSummary, shouldNotifyOverBudget, categoryBudgetTotal, monthOf } from './calc.js';
 import { openModal, confirmModal, toast } from './ui.js';
-import { esc, moneyWithSymbol, currencySymbol, parseAmount, amountInputValue, monthLabel, todayIso, tint, initial } from './format.js';
+import { esc, moneyWithSymbol, currencySymbol, parseAmount, amountInputValue, monthLabel, todayIso, displayColor, initial } from './format.js';
 
-const PALETTE = ['#26C839', '#2E7CF6', '#E8A400', '#8B5CF6', '#145F1E', '#808080', '#0EA5A5', '#D9538A'];
+// Pastellfarben für neue Kategorien. Bestehende Kategorien behalten ihre gespeicherte Farbe (Anzeige über displayColor).
+const PALETTE = ['#BDE3FF', '#B8F2D0', '#FFE58F', '#D9C8FF', '#FFC2B4', '#E6DFD3', '#A9E8E1', '#FFD0E8'];
 
 // ---------- FR-09: Änderung übernehmen und bei erster Überschreitung warnen ----------
 
@@ -49,8 +50,8 @@ function categoryChips(categories, selectedId) {
   return `<div class="chips" role="radiogroup" aria-label="Kategorie">
     ${categories
       .map(
-        (c) => `<button type="button" class="chip sm ${c.id === selectedId ? 'active' : ''}" data-cat="${c.id}" role="radio" aria-checked="${c.id === selectedId}">
-          <span class="dot" style="background:${c.color}"></span>${esc(c.name)}</button>`,
+        (c) => `<button type="button" class="chip sm pick ${c.id === selectedId ? 'active' : ''}" style="--c:${displayColor(c.color)}" data-cat="${c.id}" role="radio" aria-checked="${c.id === selectedId}">
+          <span class="sw" aria-hidden="true"></span>${esc(c.name)}</button>`,
       )
       .join('')}
   </div>`;
@@ -202,7 +203,7 @@ export function openCategoryModal({ id, viewMonth } = {}) {
         <div class="swatches" role="radiogroup" aria-label="Farbe">
           ${PALETTE.map(
             (color) => `<button type="button" class="swatch ${color === state.color ? 'active' : ''}" data-color="${color}"
-              style="background:${color};--swatch:${color}" role="radio" aria-checked="${color === state.color}" aria-label="Farbe ${color}"></button>`,
+              style="--c:${color}" role="radio" aria-checked="${color === state.color}" aria-label="Farbe ${color}"></button>`,
           ).join('')}
         </div>
       </div>
@@ -221,8 +222,7 @@ export function openCategoryModal({ id, viewMonth } = {}) {
       const preview = modal.querySelector('[data-preview]');
       const refresh = () => {
         preview.textContent = initial(form.elements.name.value);
-        preview.style.background = tint(state.color);
-        preview.style.color = state.color;
+        preview.style.setProperty('--c', displayColor(state.color));
       };
       refresh();
       form.elements.name.addEventListener('input', refresh);

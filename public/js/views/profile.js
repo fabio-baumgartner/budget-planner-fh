@@ -81,13 +81,13 @@ export function renderProfile({ doc, month, summary }) {
               <small>Mitglied seit ${esc(memberSince(doc.profile.createdAt))}</small>
             </div>
           </div>
-          <button type="button" class="budget-card" data-action="edit-budget">
+          <button type="button" class="budget-card press big" data-action="edit-budget">
             <div>
               <small>Monatsbudget ${esc(monthLabel(month))}</small>
               <strong>${moneyWithSymbol(summary.limit, cur)}</strong>
               <small>${isOverride ? 'Eigener Wert für diesen Monat' : `Summe der Kategorie-Budgets (${moneyWithSymbol(categoryBudgetTotal(doc), cur)})`}</small>
             </div>
-            <span class="hero-chip">Anpassen</span>
+            <span class="fake-btn">Anpassen</span>
           </button>
         </div>
         <div class="settings-list">${settings}</div>

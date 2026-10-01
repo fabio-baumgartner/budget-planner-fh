@@ -1,7 +1,7 @@
 import { transactionsOfMonth, round } from '../calc.js';
 import { esc, money, moneyWithSymbol, signedMoney, monthLabel, dateLabel } from '../format.js';
 import { icons } from '../icons.js';
-import { pageHead, categoryIcon, categoryMap, displayCategory, NO_CATEGORY, INCOME_COLOR } from './shared.js';
+import { pageHead, categoryIcon, categoryMap, displayCategory, swatch, NO_CATEGORY, INCOME_COLOR } from './shared.js';
 
 const FILTERS = [
   ['all', 'Alle'],
@@ -15,11 +15,11 @@ export function renderFinance({ doc, month, currentMonth, summary, filter }) {
     <div class="page">
       ${pageHead({ eyebrow: monthLabel(month), title: 'Finance', accent: 'Manager', month, currentMonth, actions: true })}
       <div class="kpis">
-        <div class="kpi"><small>Einnahmen</small><strong class="pos">+${money(summary.income, cur, 2)}</strong></div>
-        <div class="kpi"><small>Ausgaben</small><strong class="${summary.overBudget ? 'neg' : ''}">−${money(summary.expenses, cur, 2)}</strong></div>
-        <div class="kpi"><small>Verfügbar</small><strong class="${summary.negative ? 'neg' : ''}">${summary.negative ? '−' : ''}${money(summary.available, cur, 2)}</strong>
-          ${summary.carryIn !== 0 ? `<small>inkl. Übertrag ${summary.carryIn < 0 ? '−' : '+'}${money(summary.carryIn, cur, 2)}</small>` : ''}</div>
-        <div class="kpi"><small>Budget-Limit</small><strong>${money(summary.limit, cur, 2)}</strong></div>
+        <div class="kpi" style="--c:var(--mint)"><small>Einnahmen</small><strong>+${money(summary.income, cur, 2)}</strong></div>
+        <div class="kpi" style="--c:${summary.overBudget ? 'var(--red)' : 'var(--lilac)'}"><small>Ausgaben</small><strong>−${money(summary.expenses, cur, 2)}</strong></div>
+        <div class="kpi" style="--c:${summary.negative ? 'var(--red)' : 'var(--surface)'}"><small>Verfügbar</small><strong>${summary.negative ? '−' : ''}${money(summary.available, cur, 2)}</strong>
+          ${summary.carryIn !== 0 ? `<small class="kpi-sub">inkl. Übertrag ${summary.carryIn < 0 ? '−' : '+'}${money(summary.carryIn, cur, 2)}</small>` : ''}</div>
+        <div class="kpi" style="--c:var(--sky)"><small>Budget-Limit</small><strong>${money(summary.limit, cur, 2)}</strong></div>
       </div>
       <div class="finance">
         ${transactions(doc, month, filter, cur)}
@@ -45,9 +45,9 @@ function transactions(doc, month, filter, cur) {
               <span class="tx-sub">${esc(cat.name)} · ${esc(dateLabel(t.date))}</span>
             </span>
           </span>
-          <span class="tx-cat"><span class="dot" style="background:${cat.color}"></span><span>${esc(cat.name)}</span></span>
+          <span class="tx-cat">${swatch(cat.color)}<span>${esc(cat.name)}</span></span>
           <span class="tx-date">${esc(dateLabel(t.date))}</span>
-          <span class="tx-amount ${t.type === 'income' ? 'pos' : ''}">${signedMoney(t.amount, t.type, cur)}</span>
+          <span class="amt ${t.type === 'income' ? 'pos' : ''}">${signedMoney(t.amount, t.type, cur)}</span>
         </button>`;
     })
     .join('');
@@ -62,14 +62,14 @@ function transactions(doc, month, filter, cur) {
         <div class="chips" role="group" aria-label="Filter">
           ${FILTERS.map(
             ([key, label]) =>
-              `<button type="button" class="chip ${filter === key ? 'active' : ''}" data-action="filter" data-filter="${key}" aria-pressed="${filter === key}">${label}</button>`,
+              `<button type="button" class="chip press ${filter === key ? 'active' : ''}" data-action="filter" data-filter="${key}" aria-pressed="${filter === key}">${label}</button>`,
           ).join('')}
         </div>
         <span class="count">${list.length} ${list.length === 1 ? 'Buchung' : 'Buchungen'}</span>
       </div>
       <div class="table-card">
         <div class="tx-head" aria-hidden="true"><span>Bezeichnung</span><span>Kategorie</span><span>Datum</span><span style="text-align:right">Betrag</span></div>
-        ${rows || `<div class="empty">${emptyText}</div>`}
+        ${rows || `<p class="empty">${emptyText}</p>`}
       </div>
     </section>`;
 }
@@ -85,15 +85,14 @@ function recurring(doc, cur) {
     .map((r) => {
       const isSalary = r.kind === 'salary';
       const cat = isSalary ? { name: 'Gehalt', color: INCOME_COLOR } : cats[r.categoryId] || NO_CATEGORY;
-      const sub = isSalary ? 'Gehalt · am 1. des Monats' : `${cat.name} · am 1. des Monats`;
       return `
-        <button type="button" class="rec-row ${r.active ? '' : 'inactive'}" data-action="edit-recurring" data-id="${r.id}" aria-label="${esc(r.title)} bearbeiten">
+        <button type="button" class="rec-row press ${r.active ? '' : 'inactive'}" data-action="edit-recurring" data-id="${r.id}" aria-label="${esc(r.title)} bearbeiten">
           ${categoryIcon(r.title, cat.color)}
-          <span class="rec-main">
+          <span class="row-main">
             <span>${esc(r.title)}${r.active ? '' : '<span class="badge off">Pausiert</span>'}</span>
-            <small>${esc(sub)}</small>
+            <small>${esc(cat.name)} · am 1.</small>
           </span>
-          <span class="tx-amount ${isSalary ? 'pos' : ''}">${isSalary ? '+' : '−'}${moneyWithSymbol(r.amount, cur, 2)}</span>
+          <span class="amt ${isSalary ? 'pos' : ''}">${isSalary ? '+' : '−'}${moneyWithSymbol(r.amount, cur, 2)}</span>
         </button>`;
     })
     .join('');
@@ -105,8 +104,8 @@ function recurring(doc, cur) {
         <span class="section-hint">Werden am 1. jedes Monats automatisch gebucht.</span>
       </div>
       <div class="chips">
-        <button type="button" class="btn" data-action="new-recurring" data-kind="salary">${icons.plus}Gehalt</button>
-        <button type="button" class="btn" data-action="new-recurring" data-kind="fixed">${icons.plus}Fixkosten</button>
+        <button type="button" class="btn press" data-action="new-recurring" data-kind="salary">${icons.plus}Gehalt</button>
+        <button type="button" class="btn press" data-action="new-recurring" data-kind="fixed">${icons.plus}Fixkosten</button>
       </div>
       ${
         rows

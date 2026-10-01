@@ -2,7 +2,7 @@
 // Prognose (nur laufender Monat), Verlauf mit Kennzahlen, Kategorien als Tabelle.
 import { forecastMonth, categoryRows, legendRows, categoryBudgetTotal, round } from '../calc.js';
 import { esc, moneyWithSymbol, monthLabel } from '../format.js';
-import { pageHead, NO_CATEGORY } from './shared.js';
+import { pageHead, swatch, NO_CATEGORY } from './shared.js';
 import { forecastCard, trendCard } from './insights.js';
 
 export function renderAnalysis({ doc, month, currentMonth, summary, today }) {
@@ -32,7 +32,7 @@ function categoryTable(doc, summary, month, cur) {
       (c) => `
         <tr>
           <td><button type="button" class="table-link" data-action="edit-category" data-id="${c.id}">
-            <span class="dot" style="background:${c.color}"></span>${esc(c.name)}</button></td>
+            ${swatch(c.color)}${esc(c.name)}</button></td>
           <td>${moneyWithSymbol(c.budget, cur)}</td>
           <td>${moneyWithSymbol(c.spent, cur)}</td>
           <td class="${c.state === 'over' ? 'over' : ''}">${signed(c.rest)}</td>
@@ -42,8 +42,8 @@ function categoryTable(doc, summary, month, cur) {
     .join('');
 
   const noCategory = uncategorized
-    ? `<tr><td><span class="dot" style="background:${NO_CATEGORY.color}"></span>${NO_CATEGORY.name}</td><td>–</td>
-        <td>${moneyWithSymbol(uncategorized, cur)}</td><td>–</td>
+    ? `<tr><td>${swatch(NO_CATEGORY.color)}${NO_CATEGORY.name}</td><td>·</td>
+        <td>${moneyWithSymbol(uncategorized, cur)}</td><td>·</td>
         <td>${summary.expenses ? Math.round((uncategorized / summary.expenses) * 100) : 0} %</td></tr>`
     : '';
 

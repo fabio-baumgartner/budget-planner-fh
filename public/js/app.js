@@ -2,7 +2,7 @@
 import { api } from './api.js';
 import { load, getDoc, update, subscribe, onSaveState } from './store.js';
 import { monthSummary, addMonths, monthOf, transactionsToCsv } from './calc.js';
-import { todayIso, initial, esc } from './format.js';
+import { todayIso, initial, esc, money } from './format.js';
 import { icons } from './icons.js';
 import { toast, confirmModal, closeModal } from './ui.js';
 import { renderDashboard } from './views/dashboard.js';
@@ -73,11 +73,14 @@ function renderNav() {
   document.querySelectorAll('[data-nav]').forEach((nav) => (nav.innerHTML = html));
 }
 
-function render() {
+// animate: Balken wachsen beim Rendern (aus bei reinen Filterwechseln und bei "Bewegung reduzieren").
+function render({ animate = true } = {}) {
   const doc = getDoc();
   const today = todayIso();
   const summary = monthSummary(doc, ui.month);
 
+  // Statusfarbe ok / knapp / drüber für die ganze App (FR-09)
+  document.body.dataset.status = summary.status;
   document.body.classList.toggle('is-over', summary.status === 'over');
   document.querySelectorAll('[data-view]').forEach((link) => {
     const active = link.dataset.view === ui.view;
@@ -90,7 +93,9 @@ function render() {
   document.querySelectorAll('[data-user-email]').forEach((el) => (el.textContent = doc.profile.email));
   document.title = `${VIEWS[ui.view].label} · Budget Planner`;
 
-  document.getElementById('view').innerHTML = VIEWS[ui.view].render({
+  const view = document.getElementById('view');
+  view.classList.toggle('grow', animate && !reducedMotion.matches);
+  view.innerHTML = VIEWS[ui.view].render({
     doc,
     today,
     month: ui.month,
@@ -98,6 +103,40 @@ function render() {
     summary,
     filter: ui.filter,
   });
+  if (ui.view === 'dashboard') countHero(view, doc.settings.currency);
+}
+
+// ---------- Zählwerk: die Hero-Zahl zählt vom zuletzt gezeigten Wert zum neuen ----------
+
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let heroShown = null;
+let heroFrame = 0;
+
+function countHero(view, currency) {
+  const el = view.querySelector('[data-hero]');
+  if (!el) return;
+  const target = Number(el.dataset.hero);
+  const from = heroShown ?? 0;
+  const show = (value) => {
+    const rounded = Math.round(value);
+    el.textContent = `${rounded < 0 ? '−' : ''}${money(rounded, currency)}`;
+  };
+  cancelAnimationFrame(heroFrame);
+  if (reducedMotion.matches || Math.round(from) === Math.round(target)) {
+    heroShown = target;
+    show(target);
+    return;
+  }
+  const start = performance.now();
+  show(from);
+  const step = (now) => {
+    const progress = Math.min((now - start) / 900, 1);
+    heroShown = from + (target - from) * (1 - (1 - progress) ** 3);
+    show(heroShown);
+    if (progress < 1) heroFrame = requestAnimationFrame(step);
+    else heroShown = target;
+  };
+  heroFrame = requestAnimationFrame(step);
 }
 
 let lastSaveState = 'saved';
@@ -143,7 +182,7 @@ const actions = {
   },
   filter: ({ filter }) => {
     ui.filter = filter;
-    render();
+    render({ animate: false });
   },
 
   'edit-currency': () =>
