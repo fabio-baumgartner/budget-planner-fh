@@ -18,7 +18,8 @@ export function money(amount, currency, decimals = 0) {
 
 export function moneyWithSymbol(amount, currency, decimals = 0) {
   const value = money(amount, currency, decimals);
-  return currency === 'USD' ? `$${value}` : `${value} ${currencySymbol(currency)}`;
+  // Geschütztes Leerzeichen: Zahl und Währung brechen nie auseinander.
+  return currency === 'USD' ? `$${value}` : `${value} ${currencySymbol(currency)}`;
 }
 
 export function signedMoney(amount, type, currency, decimals = 2) {

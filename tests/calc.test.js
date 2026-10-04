@@ -261,6 +261,17 @@ test('Prognose fällt nie unter die bisherigen Ausgaben', () => {
   assert.equal(day1.daysRemaining, 30);
 });
 
+test('Prognose ohne Vormonate: erst ab Tag 7 aussagekräftig', () => {
+  const doc = makeDoc({ transactions: [expense('a', 200, '2026-09-01')] });
+  // Tag 1: 200 x 30 wäre eine absurde Hochrechnung, deshalb als "zu früh" markiert
+  assert.equal(forecastMonth(doc, '2026-09', '2026-09-01').early, true);
+  assert.equal(forecastMonth(doc, '2026-09', '2026-09-06').early, true);
+  assert.equal(forecastMonth(doc, '2026-09', '2026-09-07').early, false);
+  // Mit Vormonaten ist die Glättung von Anfang an verlässlich
+  const withHistory = makeDoc({ transactions: [expense('h', 500, '2026-08-10'), expense('a', 200, '2026-09-01')] });
+  assert.equal(forecastMonth(withHistory, '2026-09', '2026-09-01').early, false);
+});
+
 // ---------- Verlauf ----------
 
 test('Verlauf: 6 Monate inkl. leerer Monate und Jahreswechsel', () => {

@@ -42,7 +42,6 @@
           <li><a href="#handy">Am Handy</a></li>
           <li><a href="#faq">Häufige Fragen</a></li>
           <li><a href="#datenschutz">Daten &amp; Sicherheit</a></li>
-          <li><a href="#projekt">Über das Projekt</a></li>
         </ol>
       </details>
     </nav>
@@ -259,7 +258,7 @@
           <dt>Name</dt><dd>Wird in der App angezeigt. Die E-Mail-Adresse kann nicht geändert werden.</dd>
           <dt>Monatsbudget</dt><dd>Eigenes Limit für den gewählten Monat festlegen oder auf die Summe der Kategorien zurücksetzen.</dd>
           <dt>Währung</dt><dd>Euro, Schweizer Franken oder US-Dollar. Das ändert nur die Anzeige, Beträge werden nicht umgerechnet.</dd>
-          <dt>Warnung bei</dt><dd>Ab welchem Anteil vom Budget Kategorien gelb werden und die Prognose „knapp“ meldet.</dd>
+          <dt>Warnung bei</dt><dd>Ab welchem Anteil vom Budget die App gelb wird, Kategorien ein <em>knapp</em>-Schild bekommen und die Prognose „knapp“ meldet.</dd>
           <dt>Übertrag aus Vormonat</dt><dd>An: laufender Kontostand über alle Monate. Aus: Jeder Monat startet bei 0 €.</dd>
           <dt>Buchungen exportieren</dt><dd>Lädt alle Buchungen als CSV-Datei herunter, die sich direkt in Excel öffnen lässt.</dd>
           <dt>Abmelden / Account löschen</dt><dd>Löschen entfernt deinen Account und alle Daten endgültig. Das lässt sich nicht rückgängig machen.</dd>
@@ -299,7 +298,7 @@
           </details>
           <details>
             <summary>Die Prognose am Monatsanfang wirkt komisch.</summary>
-            <p>In den ersten Tagen gibt es wenig Daten. Die App stützt sich dann vor allem auf deine Vormonate. Im allerersten Monat ohne Vormonate ist die Schätzung naturgemäß ungenauer.</p>
+            <p>In den ersten Tagen gibt es wenig Daten. Die App stützt sich dann vor allem auf deine Vormonate. Gibt es noch keine Vormonate, zeigt sie die Prognose erst ab dem 7. Tag, weil eine Hochrechnung aus ein, zwei Tagen nichts aussagt.</p>
           </details>
           <details>
             <summary>Kann ich die App auf Handy und Computer gleichzeitig nutzen?</summary>
@@ -334,14 +333,6 @@
           <li><strong>Gespeichert</strong> wird auf Servern von Vercel in Frankfurt.</li>
           <li><strong>Löschen:</strong> <em>Profil → Account löschen</em> entfernt alles endgültig.</li>
         </ul>
-      </section>
-
-      <!-- Projekt -->
-      <section id="projekt" class="help-section">
-        <h2>Über das Projekt</h2>
-        <p>Der Budget Planner ist ein Projekt der Lehrveranstaltung <em>Einführung in Software Engineering</em> an der FH Technikum Wien
-          (BSc Wirtschaftsinformatik, WS 26/27). Er ist ein Prototyp: Er deckt die im Projekt definierten Anforderungen ab, ist aber nicht für den Produktiveinsatz gedacht.</p>
-        <p class="help-meta">Technik: HTML, CSS und JavaScript ohne Framework, Serverless Functions und Blob Storage auf Vercel. Stand: September 2026.</p>
       </section>
 
       <div class="help-end">

@@ -1,5 +1,5 @@
 // Auswertungs-Karten: Prognose Monatsende, Verlauf der letzten 6 Monate (ausführlich und als Mini-Version).
-import { history } from '../calc.js';
+import { history, EARLY_DAYS } from '../calc.js';
 import { esc, moneyWithSymbol, monthLabel, monthShort, dateLabel } from '../format.js';
 
 // ---------- Mini-Verlauf fürs Dashboard: nur Balken, keine Achse, keine Kennzahlen ----------
@@ -44,6 +44,7 @@ const FORECAST_STATUS = {
 };
 
 export function forecastCard(f, cur) {
+  if (f.early) return earlyForecastCard(f, cur);
   const status = FORECAST_STATUS[f.status];
   const end = dateLabel(f.endDate);
   const spentSoFar = f.fixed + f.variableSoFar;
@@ -92,6 +93,37 @@ export function forecastCard(f, cur) {
         <div><small>Übrig am Monatsende</small><strong class="${f.projectedAvailable < 0 ? 'neg' : ''}">${f.projectedAvailable < 0 ? '−' : ''}${moneyWithSymbol(f.projectedAvailable, cur)}</strong></div>
       </div>
       <p class="card-note">${esc(basis)}</p>
+    </section>`;
+}
+
+// Erster Monat ohne Vormonate, Tag 1 bis 6: keine Hochrechnung, nur der bisherige Stand.
+function earlyForecastCard(f, cur) {
+  const spentSoFar = f.fixed + f.variableSoFar;
+  const scale = Math.max(f.limit, spentSoFar, 1) * 1.08;
+  const pct = (v) => Math.min((v / scale) * 100, 100).toFixed(1);
+  return `
+    <section class="card forecast-card" aria-label="Prognose Monatsende">
+      <div class="card-head">
+        <h2 class="card-title">Prognose Monatsende</h2>
+        <span class="sticker">Zu früh</span>
+      </div>
+      <div>
+        <div class="forecast-value">Ab dem ${EARLY_DAYS}. Tag</div>
+        <div class="forecast-caption">bisher ausgegeben: ${moneyWithSymbol(spentSoFar, cur)}</div>
+      </div>
+      <div class="meter" role="img" aria-label="Bisher ${moneyWithSymbol(spentSoFar, cur)}, Budget-Limit ${moneyWithSymbol(f.limit, cur)}">
+        <div class="meter-track"><span class="meter-spent gx" style="width:${pct(spentSoFar)}%"></span></div>
+        ${f.limit > 0 ? `<span class="meter-limit" style="left:${pct(f.limit)}%"></span>` : ''}
+      </div>
+      <div class="chart-key" aria-hidden="true">
+        <span><i class="k-spent"></i>Bisher</span>
+        ${f.limit > 0 ? '<span><i class="k-marker"></i>Limit</span>' : ''}
+      </div>
+      <p class="forecast-text">Ohne Vormonate rechnet die App erst ab dem ${EARLY_DAYS}. Tag hoch. Aus ein, zwei Tagen lässt sich noch nicht sagen, wo du am Monatsende landest.</p>
+      <div class="mini-stats">
+        <div><small>Noch pro Tag drin</small><strong>${moneyWithSymbol(f.dailyAllowance, cur, 2)}</strong></div>
+        <div><small>Bisher ausgegeben</small><strong>${moneyWithSymbol(spentSoFar, cur)}</strong></div>
+      </div>
     </section>`;
 }
 

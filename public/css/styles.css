@@ -213,7 +213,7 @@ input:focus { outline: none; }
 .user-chip:hover { background: var(--butter); }
 .user-text { display: flex; flex-direction: column; min-width: 0; }
 .user-text strong { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.user-text small { font-family: var(--mono); font-size: 10.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-text small { font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .avatar {
   width: 40px;
@@ -587,6 +587,7 @@ input:focus { outline: none; }
 .hero-status.tight .dot { background: var(--butter); color: var(--ink); }
 .hero-status.over .dot { background: var(--red); color: var(--ink); }
 .hero-status.hint .dot { background: var(--mint); color: var(--ink); }
+.hero-status.early .dot { background: var(--surface); color: var(--ink); }
 
 .hero-side { display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; min-width: 0; }
 
@@ -1082,7 +1083,7 @@ input:focus { outline: none; }
 .profile-card { display: flex; align-items: center; gap: 16px; background: var(--sky); }
 .profile-card div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .profile-card strong { font-family: var(--display); font-weight: 400; font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.profile-card small { font-family: var(--mono); font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-card small { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .budget-card {
   display: flex;
@@ -1140,7 +1141,7 @@ input:focus { outline: none; }
 button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .setting.danger { color: var(--red-ink); font-weight: 700; }
 
-.setting-value { display: flex; align-items: center; gap: 10px; min-width: 0; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.setting-value { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 14px; color: var(--ink-2); white-space: nowrap; }
 .setting-value svg { width: 8px; height: 14px; flex-shrink: 0; }
 
 /* Schalter: <span class="switch"> im Profil, <input type="checkbox"> in Dialogen */

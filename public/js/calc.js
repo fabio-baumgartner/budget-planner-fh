@@ -196,8 +196,12 @@ export function forecastMonth(doc, month, todayIso) {
     // So viel darf ab heute pro Tag noch ausgegeben werden, um im Budget zu bleiben.
     dailyAllowance: round(Math.max(limit - summary.expenses, 0) / daysRemaining),
     status,
+    // Ohne Vormonate ist eine Hochrechnung aus wenigen Tagen nicht aussagekräftig: erst ab Tag 7 anzeigen.
+    early: previous.length === 0 && elapsed < EARLY_DAYS,
   };
 }
+
+export const EARLY_DAYS = 7;
 
 // ---------- Verlauf ----------
 

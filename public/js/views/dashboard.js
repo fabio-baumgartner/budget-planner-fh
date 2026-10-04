@@ -1,7 +1,7 @@
 // Dashboard: beantwortet nur drei Fragen.
 // 1. Wie viel habe ich noch? 2. Komme ich durch den Monat? 3. Wofür geht mein Geld weg?
 // Details (ausführliche Prognose, Verlauf mit Kennzahlen, Kategorie-Tabelle) stehen unter "Auswertungen".
-import { categoryRows, daysLeft, transactionsOfMonth, forecastMonth, addMonths } from '../calc.js';
+import { categoryRows, daysLeft, transactionsOfMonth, forecastMonth, addMonths, EARLY_DAYS } from '../calc.js';
 import { esc, money, moneyWithSymbol, currencySymbol, monthLabel, monthName, dateLabel, signedMoney, displayColor } from '../format.js';
 import { icons } from '../icons.js';
 import { pageHead, categoryIcon, categoryMap, displayCategory } from './shared.js';
@@ -90,6 +90,9 @@ function status(doc, summary, forecast, month, current, cur) {
   }
   if (summary.limit <= 0) return '';
 
+  if (forecast?.early) {
+    return `<span class="hero-status early"><span class="dot" aria-hidden="true">…</span>Prognose ab dem ${EARLY_DAYS}. Tag</span>`;
+  }
   if (forecast) {
     const diff = moneyWithSymbol(Math.abs(forecast.difference), cur);
     const text = {
