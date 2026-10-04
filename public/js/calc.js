@@ -228,14 +228,28 @@ export function history(doc, endMonth, count = 6) {
 }
 
 // Karten im Dashboard: Fortschritt und Zustand je Kategorie.
+// Ohne Budget (0) gibt es kein "drüber": Zustand none, nur die Ausgaben zählen.
 export function categoryRows(doc, summary) {
   return doc.categories.map((c) => {
     const spent = round(summary.spentByCategory[c.id] || 0);
     const rest = round(c.budget - spent);
-    const ratio = c.budget > 0 ? spent / c.budget : spent > 0 ? Infinity : 0;
+    if (!(c.budget > 0)) return { ...c, spent, rest, pct: 0, state: 'none' };
+    const ratio = spent / c.budget;
     const state = rest < 0 ? 'over' : ratio >= doc.settings.warnAt ? 'warn' : 'ok';
     return { ...c, spent, rest, pct: Math.min(Math.round(ratio * 100), 100), state };
   });
+}
+
+// Faustregel 50/30/20 (Bedürfnisse / Wünsche / Sparen), verteilt auf die Standardkategorien.
+// Nur ein Vorschlag im Dialog "Budgets festlegen"; eigene Kategorien bekommen keinen Wert.
+export const BUDGET_RULE = { wohnen: 0.3, essen: 0.13, 'mobilität': 0.07, freizeit: 0.15, sonstiges: 0.15, sparen: 0.2 };
+
+export function suggestBudgets(categories, income) {
+  return Object.fromEntries(
+    categories
+      .filter((c) => BUDGET_RULE[c.name.trim().toLowerCase()] !== undefined)
+      .map((c) => [c.id, Math.round(income * BUDGET_RULE[c.name.trim().toLowerCase()])]),
+  );
 }
 
 // Legende: Anteil jeder Kategorie an allen Ausgaben des Monats.

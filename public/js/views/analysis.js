@@ -35,7 +35,7 @@ function categoryTable(doc, summary, month, cur) {
             ${swatch(c.color)}${esc(c.name)}</button></td>
           <td>${moneyWithSymbol(c.budget, cur)}</td>
           <td>${moneyWithSymbol(c.spent, cur)}</td>
-          <td class="${c.state === 'over' ? 'over' : ''}">${signed(c.rest)}</td>
+          <td class="${c.state === 'over' ? 'over' : ''}">${c.state === 'none' ? '·' : signed(c.rest)}</td>
           <td>${shares[c.id] ?? 0} %</td>
         </tr>`,
     )

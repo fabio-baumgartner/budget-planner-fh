@@ -14,6 +14,7 @@ import {
   openCategoryModal,
   openRecurringModal,
   openBudgetModal,
+  openBudgetsModal,
   openNameModal,
   openChoiceModal,
   checkOverBudgetOnLoad,
@@ -164,6 +165,7 @@ const actions = {
   'new-recurring': ({ kind }) => openRecurringModal({ kind }),
   'edit-recurring': ({ id }) => openRecurringModal({ id }),
   'edit-budget': () => openBudgetModal(ui.month),
+  'edit-budgets': () => openBudgetsModal(),
   'edit-name': () => openNameModal(),
 
   'prev-month': () => setMonth(addMonths(ui.month, -1)),

@@ -695,6 +695,9 @@ input:focus { outline: none; }
 .cat-rest { font-family: var(--mono); font-size: 11.5px; line-height: 1.35; }
 .cat-rest span { color: var(--ink-2); }
 .cat-tile.over .cat-rest { font-weight: 700; }
+.cat-tile.none .cat-pct { font-size: 30px; }
+.cat-tile.none .cat-track { border-style: dashed; }
+.dash-cats .section-hint { max-width: 640px; }
 
 .empty-add {
   display: flex;
@@ -1271,6 +1274,16 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .input-group:focus-within { box-shadow: var(--sh-sm); }
 .input-group span { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
 .input-group input { flex: 1; min-width: 0; padding: 10px 0; border: none; background: transparent; font-family: var(--mono); font-size: 17px; font-weight: 700; }
+
+/* Dialog "Budgets festlegen" */
+.budget-suggest { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.btn:disabled { opacity: .5; cursor: default; transform: none; box-shadow: var(--sh-sm); }
+.budget-rows { display: flex; flex-direction: column; gap: 8px; }
+.budget-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; align-items: center; gap: 12px; }
+.budget-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.budget-name span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.budget-row .input-group { padding: 2px 12px; }
+.budget-row .input-group input { padding: 8px 0; text-align: right; }
 
 .row { display: flex; align-items: center; gap: 14px; }
 .row > .input { flex: 1; min-width: 0; }

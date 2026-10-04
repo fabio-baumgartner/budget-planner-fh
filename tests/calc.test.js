@@ -6,6 +6,7 @@ import {
   applyRecurring,
   monthSummary,
   categoryRows,
+  suggestBudgets,
   donutArcs,
   shouldNotifyOverBudget,
   transactionsToCsv,
@@ -150,6 +151,22 @@ test('categoryRows: übrig, Warnung, drüber', () => {
   const doc = makeDoc();
   const rows = categoryRows(doc, { spentByCategory: { wohnen: 950, essen: 450 } });
   assert.deepEqual(rows.map((r) => [r.state, r.rest, r.pct]), [['warn', 50, 95], ['over', -50, 100]]);
+});
+
+test('categoryRows: ohne Budget kein "drüber"', () => {
+  const doc = makeDoc({ categories: [{ id: 'essen', name: 'Essen', color: '#26C839', budget: 0 }] });
+  const [row] = categoryRows(doc, { spentByCategory: { essen: 80 } });
+  assert.equal(row.state, 'none');
+  assert.equal(row.spent, 80);
+  assert.equal(row.pct, 0);
+});
+
+test('suggestBudgets: 50/30/20 nach Kategorienamen, eigene Kategorien ohne Vorschlag', () => {
+  const cats = ['Wohnen', 'Essen', 'Mobilität', 'Freizeit', 'Sparen', 'Sonstiges', 'Haustier'].map((name) => ({ id: name, name }));
+  const s = suggestBudgets(cats, 1800);
+  assert.deepEqual(s, { Wohnen: 540, Essen: 234, Mobilität: 126, Freizeit: 270, Sparen: 360, Sonstiges: 270 });
+  assert.equal(s.Haustier, undefined);
+  assert.equal(Object.values(s).reduce((a, b) => a + b, 0), 1800);
 });
 
 test('donutArcs: je Kategorie Budget- und Ausgabenbogen', () => {

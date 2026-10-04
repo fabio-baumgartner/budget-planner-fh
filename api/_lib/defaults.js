@@ -1,13 +1,14 @@
 // Startdokument für neue User. Kategorien und Farben aus dem UI-Design.
+// Budgets starten bei 0: Jeder legt sie selbst fest (Dialog "Budgets festlegen" in der App).
 import { randomUUID } from 'node:crypto';
 
 const DEFAULT_CATEGORIES = [
-  { name: 'Wohnen', color: '#2E7CF6', budget: 800 },
-  { name: 'Essen', color: '#26C839', budget: 400 },
-  { name: 'Mobilität', color: '#E8A400', budget: 150 },
-  { name: 'Freizeit', color: '#8B5CF6', budget: 200 },
-  { name: 'Sparen', color: '#145F1E', budget: 200 },
-  { name: 'Sonstiges', color: '#808080', budget: 100 },
+  { name: 'Wohnen', color: '#2E7CF6', budget: 0 },
+  { name: 'Essen', color: '#26C839', budget: 0 },
+  { name: 'Mobilität', color: '#E8A400', budget: 0 },
+  { name: 'Freizeit', color: '#8B5CF6', budget: 0 },
+  { name: 'Sparen', color: '#145F1E', budget: 0 },
+  { name: 'Sonstiges', color: '#808080', budget: 0 },
 ];
 
 export function createDefaultDoc({ name, email, today = new Date() }) {

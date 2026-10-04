@@ -1,7 +1,7 @@
 // Dashboard: beantwortet nur drei Fragen.
 // 1. Wie viel habe ich noch? 2. Komme ich durch den Monat? 3. Wofür geht mein Geld weg?
 // Details (ausführliche Prognose, Verlauf mit Kennzahlen, Kategorie-Tabelle) stehen unter "Auswertungen".
-import { categoryRows, daysLeft, transactionsOfMonth, forecastMonth, addMonths, EARLY_DAYS } from '../calc.js';
+import { categoryRows, categoryBudgetTotal, daysLeft, transactionsOfMonth, forecastMonth, addMonths, EARLY_DAYS } from '../calc.js';
 import { esc, money, moneyWithSymbol, currencySymbol, monthLabel, monthName, dateLabel, signedMoney, displayColor } from '../format.js';
 import { icons } from '../icons.js';
 import { pageHead, categoryIcon, categoryMap, displayCategory } from './shared.js';
@@ -29,7 +29,7 @@ function hero(doc, summary, month, today, cur) {
   const current = today.slice(0, 7);
   const left = daysLeft(month, today);
   const chip = month < current ? 'Abgeschlossen' : `${left} ${left === 1 ? 'Tag' : 'Tage'} übrig`;
-  const pct = summary.limit > 0 ? Math.min((summary.expenses / summary.limit) * 100, 100) : summary.expenses > 0 ? 100 : 0;
+  const pct = summary.limit > 0 ? Math.min((summary.expenses / summary.limit) * 100, 100) : 0;
   const forecast = forecastMonth(doc, month, today);
 
   // Erklärung hinter dem ⓘ (auch am Handy per Tipp lesbar)
@@ -60,7 +60,9 @@ function hero(doc, summary, month, today, cur) {
           <div class="hero-meter-head"><span>Ausgegeben</span><strong>${Math.round(summary.ratio * 100)} %</strong></div>
           <div class="seg-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"
             aria-label="Anteil des Budgets ausgegeben"><span class="seg-fill gx" style="width:${pct.toFixed(1)}%"></span></div>
-          <div class="hero-meter-foot">${moneyWithSymbol(summary.expenses, cur)} von ${moneyWithSymbol(summary.limit, cur)}</div>
+          <div class="hero-meter-foot">${
+            summary.limit > 0 ? `${moneyWithSymbol(summary.expenses, cur)} von ${moneyWithSymbol(summary.limit, cur)}` : 'Noch kein Budget festgelegt'
+          }</div>
         </div>
         ${
           forecast && summary.limit > 0
@@ -68,8 +70,8 @@ function hero(doc, summary, month, today, cur) {
             : ''
         }
         <div class="hero-flow">
-          <div><small>Einnahmen</small><strong>+${moneyWithSymbol(summary.income, cur)}</strong></div>
-          <div><small>Ausgaben</small><strong>−${moneyWithSymbol(summary.expenses, cur)}</strong></div>
+          <div><small>Einnahmen</small><strong>${summary.income ? '+' : ''}${moneyWithSymbol(summary.income, cur)}</strong></div>
+          <div><small>Ausgaben</small><strong>${summary.expenses ? '−' : ''}${moneyWithSymbol(summary.expenses, cur)}</strong></div>
         </div>
       </div>
     </section>`;
@@ -88,7 +90,11 @@ function status(doc, summary, forecast, month, current, cur) {
     return `<button type="button" class="hero-status over press" data-action="edit-budget" title="Budget anpassen">
       <span class="dot" aria-hidden="true">!</span>Budget um ${moneyWithSymbol(summary.expenses - summary.limit, cur)} überschritten</button>`;
   }
-  if (summary.limit <= 0) return '';
+  // Noch keine Kategorie-Budgets: dorthin führen, statt eine Prognose ohne Limit zu zeigen.
+  if (summary.limit <= 0) {
+    return `<button type="button" class="hero-status hint press" data-action="edit-budgets">
+      <span class="dot" aria-hidden="true">+</span>Noch kein Budget · Budgets festlegen</button>`;
+  }
 
   if (forecast?.early) {
     return `<span class="hero-status early"><span class="dot" aria-hidden="true">…</span>Prognose ab dem ${EARLY_DAYS}. Tag</span>`;
@@ -116,17 +122,30 @@ function categories(doc, summary, cur) {
 
   const tiles = rows
     .map((c, i) => {
-      const shown = c.budget > 0 ? Math.round((c.spent / c.budget) * 100) : c.spent > 0 ? 100 : 0;
+      const style = `--c:${displayColor(c.color)};--i:${i}`;
+      // Ohne Budget: nur die Ausgaben, kein Prozentwert, kein "drüber"
+      if (c.state === 'none') {
+        const text = `${moneyWithSymbol(c.spent, cur)} ausgegeben`;
+        return `
+          <button type="button" class="cat-tile press big none" style="${style}" data-action="edit-category" data-id="${c.id}"
+            aria-label="${esc(c.name)}: ${esc(text)}, kein Budget, bearbeiten">
+            <span class="cat-top"><span class="cat-name">${esc(c.name)}</span></span>
+            <span class="cat-pct">${money(c.spent, cur)}<small>${esc(currencySymbol(cur))}</small></span>
+            <span class="cat-track"><span class="cat-fill" style="width:0"></span></span>
+            <span class="cat-rest">ausgegeben <span>· kein Budget</span></span>
+          </button>`;
+      }
+      const shown = Math.round((c.spent / c.budget) * 100);
       const text = c.state === 'over' ? `${moneyWithSymbol(-c.rest, cur)} drüber` : `${moneyWithSymbol(c.rest, cur)} übrig`;
       const sticker =
         c.state === 'over' ? '<span class="sticker sm over">drüber</span>' : c.state === 'warn' ? '<span class="sticker sm warn">knapp</span>' : '';
       return `
-        <button type="button" class="cat-tile press big ${c.state}" style="--c:${displayColor(c.color)};--i:${i}" data-action="edit-category" data-id="${c.id}"
+        <button type="button" class="cat-tile press big ${c.state}" style="${style}" data-action="edit-category" data-id="${c.id}"
           aria-label="${esc(c.name)}: ${esc(text)}, bearbeiten">
           <span class="cat-top"><span class="cat-name">${esc(c.name)}</span>${sticker}</span>
           <span class="cat-pct">${shown}<small>%</small></span>
           <span class="cat-track"><span class="cat-fill gx" style="width:${c.pct}%"></span></span>
-          <span class="cat-rest">${text} <span>von ${moneyWithSymbol(c.budget, cur)}</span></span>
+          <span class="cat-rest">${text} <span>· Budget ${moneyWithSymbol(c.budget, cur)}</span></span>
         </button>`;
     })
     .join('');
@@ -134,8 +153,14 @@ function categories(doc, summary, cur) {
   return `
     <section class="section cats dash-cats" aria-label="Kategorien">
       <div class="section-head">
-        <h2 class="section-title">Kategorien</h2>
-        <button type="button" class="btn sm press" data-action="new-category">${icons.plus}Neu</button>
+        <div>
+          <h2 class="section-title">Kategorien</h2>
+          <span class="section-hint">${budgetHint(doc, summary, cur)}</span>
+        </div>
+        <div class="chips">
+          <button type="button" class="btn sm press" data-action="edit-budgets">Budgets festlegen</button>
+          <button type="button" class="btn sm press" data-action="new-category">${icons.plus}Neu</button>
+        </div>
       </div>
       ${
         rows.length
@@ -143,6 +168,16 @@ function categories(doc, summary, cur) {
           : `<button type="button" class="empty-add" data-action="new-category">${icons.plus}Erste Kategorie anlegen</button>`
       }
     </section>`;
+}
+
+// Erklärzeile: woher das Budget-Limit kommt
+function budgetHint(doc, summary, cur) {
+  const total = categoryBudgetTotal(doc);
+  if (doc.budgetOverrides[summary.month] != null) {
+    return `Budget-Limit für ${esc(monthName(summary.month))} im Profil auf ${moneyWithSymbol(summary.limit, cur)} gesetzt · Kategorie antippen zum Ändern`;
+  }
+  if (total <= 0) return 'Noch keine Budgets festgelegt · lege fest, wie viel pro Kategorie und Monat drin ist';
+  return `Zusammen ${moneyWithSymbol(total, cur)} = dein Budget-Limit · Kategorie antippen zum Ändern`;
 }
 
 // ---------- Letzte Buchungen ----------

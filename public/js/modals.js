@@ -1,6 +1,6 @@
 // Alle Dialoge zum Anlegen und Bearbeiten. Änderungen laufen über store.update().
 import { getDoc, update, newId } from './store.js';
-import { monthSummary, shouldNotifyOverBudget, categoryBudgetTotal, monthOf } from './calc.js';
+import { monthSummary, shouldNotifyOverBudget, categoryBudgetTotal, monthOf, suggestBudgets } from './calc.js';
 import { openModal, confirmModal, toast } from './ui.js';
 import { esc, moneyWithSymbol, currencySymbol, parseAmount, amountInputValue, monthLabel, todayIso, displayColor, initial } from './format.js';
 
@@ -336,6 +336,10 @@ export function openRecurringModal({ kind = 'fixed', id } = {}) {
         });
         close();
         toast(existing ? `${label} gespeichert` : `${title} angelegt und für ${monthLabel(month)} gebucht`, 'success');
+        // Erstes Gehalt und noch keine Budgets: direkt zum Festlegen der Budgets weiterführen.
+        if (!existing && isSalary && getDoc().categories.length && categoryBudgetTotal(getDoc()) === 0) {
+          openBudgetsModal({ afterSalary: true });
+        }
       });
 
       modal.querySelector('[data-delete]')?.addEventListener('click', async () => {
@@ -394,6 +398,105 @@ export function openBudgetModal(month) {
         });
         close();
         toast('Budget zurückgesetzt', 'success');
+      });
+    },
+  });
+}
+
+// ---------- Budgets je Kategorie festlegen (alle auf einmal) ----------
+
+export function openBudgetsModal({ afterSalary = false } = {}) {
+  const doc = getDoc();
+  const cur = doc.settings.currency;
+  const month = monthOf(todayIso());
+  if (!doc.categories.length) return toast('Lege zuerst eine Kategorie an.', 'info');
+
+  const salaryTotal = doc.recurring.filter((r) => r.kind === 'salary' && r.active).reduce((s, r) => s + r.amount, 0);
+  const income = salaryTotal || monthSummary(doc, month).income;
+  const incomeLabel = salaryTotal ? 'Gehalt pro Monat' : `Einnahmen ${monthLabel(month)}`;
+  const override = doc.budgetOverrides[month];
+
+  const rows = doc.categories
+    .map(
+      (c) => `
+        <label class="budget-row">
+          <span class="budget-name"><span class="sw" style="--c:${displayColor(c.color)}" aria-hidden="true"></span><span>${esc(c.name)}</span></span>
+          <span class="input-group">
+            <input data-id="${c.id}" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(amountInputValue(c.budget))}" aria-label="Budget ${esc(c.name)}">
+            <span>${esc(currencySymbol(cur))}</span>
+          </span>
+        </label>`,
+    )
+    .join('');
+
+  const intro = afterSalary
+    ? 'Dein Gehalt ist angelegt. Lege jetzt fest, wie viel du pro Monat für jede Kategorie einplanst.'
+    : 'Lege fest, wie viel du pro Monat für jede Kategorie einplanst. Zusammen ergibt das dein Budget-Limit.';
+
+  openModal({
+    title: 'Budgets festlegen',
+    body: `
+      <form novalidate style="display:contents">
+        <p class="modal-text">${intro}</p>
+        <div class="budget-suggest">
+          <button type="button" class="btn sm" data-suggest ${income > 0 ? '' : 'disabled'}>Nach 50/30/20 vorschlagen</button>
+          <span class="modal-note">${
+            income > 0
+              ? 'Faustregel: 50 % für Bedürfnisse (Wohnen, Essen, Mobilität), 30 % für Wünsche (Freizeit, Sonstiges), 20 % fürs Sparen. Eigene Kategorien bekommen keinen Vorschlag.'
+              : 'Für einen Vorschlag lege zuerst ein Gehalt an.'
+          }</span>
+        </div>
+        <div class="budget-rows">${rows}</div>
+        <div class="rec-totals">
+          <div><span>Summe = Budget-Limit</span><strong data-sum></strong></div>
+          ${income > 0 ? `<div><span>${esc(incomeLabel)}</span><strong>${moneyWithSymbol(income, cur)}</strong></div><div><span>Bleibt frei</span><strong data-rest></strong></div>` : ''}
+        </div>
+        ${override != null ? `<p class="modal-note">Für ${esc(monthLabel(month))} gilt im Profil ein eigenes Limit von ${moneyWithSymbol(override, cur)}. Es hat Vorrang vor dieser Summe.</p>` : ''}
+        <p class="form-error" role="alert" hidden></p>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Budgets speichern</button>
+        </div>
+      </form>`,
+    onMount(modal, close) {
+      const form = modal.querySelector('form');
+      const inputs = [...modal.querySelectorAll('[data-id]')];
+      const valueOf = (input) => (input.value.trim() === '' ? 0 : parseAmount(input.value));
+
+      const refresh = () => {
+        const sum = inputs.reduce((s, input) => s + (valueOf(input) || 0), 0);
+        modal.querySelector('[data-sum]').textContent = moneyWithSymbol(sum, cur, sum % 1 ? 2 : 0);
+        const rest = modal.querySelector('[data-rest]');
+        if (rest) rest.textContent = `${income - sum < 0 ? '−' : ''}${moneyWithSymbol(income - sum, cur, (income - sum) % 1 ? 2 : 0)}`;
+      };
+      refresh();
+      inputs.forEach((input) => input.addEventListener('input', refresh));
+
+      modal.querySelector('[data-suggest]').addEventListener('click', () => {
+        const suggestion = suggestBudgets(getDoc().categories, income);
+        inputs.forEach((input) => {
+          if (suggestion[input.dataset.id] !== undefined) input.value = String(suggestion[input.dataset.id]);
+        });
+        refresh();
+      });
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const budgets = {};
+        for (const input of inputs) {
+          const value = valueOf(input);
+          if (!(value >= 0)) {
+            input.focus();
+            return formError(modal, 'Bitte gib gültige Beträge an, z. B. 250 oder 12,50.');
+          }
+          budgets[input.dataset.id] = value;
+        }
+        commit([month], (d) => {
+          d.categories.forEach((c) => {
+            if (budgets[c.id] !== undefined) c.budget = budgets[c.id];
+          });
+        });
+        close();
+        toast('Budgets gespeichert', 'success');
       });
     },
   });
