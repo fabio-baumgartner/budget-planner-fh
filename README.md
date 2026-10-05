@@ -65,11 +65,48 @@ Einnahmen und Ausgaben der letzten 6 Monate inklusive leerer Monate, Durchschnit
 | FR-07/08 Automatische Buchung am 1. | `applyRecurring()` |
 | FR-09 Benachrichtigung bei Überschreitung | Toast + rotes Theme, `shouldNotifyOverBudget()` |
 
-## Struktur
+## Architektur (3 Schichten)
+
+Der Code ist in drei Teile gegliedert: User Interface, Backend und Datenbank.
 
 ```
-api/            Serverless Functions (auth/*, data.js) und _lib/ (Storage, Session, Validierung)
-public/         index.html (App), login.html, css/, js/ (calc, store, views, modals)
+🖥️ USER INTERFACE  (was man sieht, läuft im Browser)
+   public/                 alle Seiten, Design und Browser-Code
+
+⚙️ BACKEND  (Logik am Server, Vercel Serverless Functions)
+   api/                    Login, Registrierung, Daten laden/speichern
+                           (außer storage.js und defaults.js)
+
+🗄️ DATENBANK  (Datenzugriff und Datenmodell)
+   api/_lib/storage.js     liest und schreibt die Daten
+   api/_lib/defaults.js    so sieht ein neues User-Dokument aus
+```
+
+**Ablauf:** Browser (`public/`) → Server (`api/`) → Speicher (`storage.js` → Vercel Blob)
+
+| Schicht | Dateien |
+|---|---|
+| User Interface | `public/*.html`, `public/css/`, `public/js/` (app, ui, views, modals, auth, store, format, icons, calc, api) |
+| Backend | `api/auth/*` (register, login, logout, me), `api/data.js`, `api/_lib/` (session, password, validate, http) |
+| Datenbank | `api/_lib/storage.js`, `api/_lib/defaults.js` |
+
+Zwei Sonderfälle:
+- `public/js/calc.js` enthält die Rechenlogik, läuft aber im Browser.
+- `public/js/api.js` gehört zum User Interface und ist nur die Verbindung zum Backend.
+
+Der Ordner `api/` muss für Vercel so heißen, deshalb gibt es keinen eigenen Ordner `backend/`.
+
+### Wo werden die Daten gespeichert?
+
+- **Live:** im privaten **Vercel Blob Store**. Das ist ein Cloud-Speicher für Dateien, keine SQL-Datenbank. Jeder User hat dort ein eigenes JSON-Dokument:
+  - `users/<userId>/data.json`: Profil, Einstellungen, Kategorien, Gehalt und Fixkosten, Buchungen
+  - `users/by-email/<Hash der E-Mail>.json`: Login-Daten (userId, E-Mail, Salt, Passwort-Hash, nie das Passwort selbst)
+- **Lokal beim Entwickeln** (ohne Blob-Token): Ordner `.data/` im Projekt, nicht im Repo.
+- **Im Browser:** keine Daten dauerhaft gespeichert, nur das Login-Cookie `bp_session` (7 Tage gültig).
+
+### Weitere Ordner
+
+```
 scripts/        lokaler Dev-Server
 tests/          Unit-Tests (node:test)
 ```
