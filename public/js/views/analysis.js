@@ -5,6 +5,8 @@ import { esc, moneyWithSymbol, monthLabel } from '../format.js';
 import { pageHead, swatch, NO_CATEGORY } from './shared.js';
 import { forecastCard, trendCard } from './insights.js';
 
+// Rendert die Ansicht als HTML-String. Die Prognose-Karte gibt es nur im laufenden Monat,
+// für andere Monate liefert forecastMonth() null.
 export function renderAnalysis({ doc, month, currentMonth, summary, today }) {
   const cur = doc.settings.currency;
   const forecast = forecastMonth(doc, month, today);
@@ -19,14 +21,19 @@ export function renderAnalysis({ doc, month, currentMonth, summary, today }) {
     </div>`;
 }
 
+// Tabelle je Kategorie: Budget, ausgegeben, übrig, Anteil an allen Ausgaben des Monats.
+// Dazu eine Zeile "Ohne Kategorie" (nur wenn nötig) und eine Gesamtzeile.
 function categoryTable(doc, summary, month, cur) {
   const rows = categoryRows(doc, summary);
   const shares = Object.fromEntries(legendRows(doc, summary).map((l) => [l.id, l.pct]));
+  // Ausgaben ohne Kategorie (z. B. weil die Kategorie gelöscht wurde) stehen unter dem Schlüssel 'none'.
   const uncategorized = round(summary.spentByCategory.none || 0);
   const budgetTotal = categoryBudgetTotal(doc);
   const restTotal = round(budgetTotal - summary.expenses);
+  // Betrag mit Minuszeichen davor, moneyWithSymbol selbst zeigt immer den Betrag ohne Vorzeichen.
   const signed = (v) => `${v < 0 ? '−' : ''}${moneyWithSymbol(v, cur)}`;
 
+  // Eine Tabellenzeile pro Kategorie. Klick auf den Namen öffnet die Kategorie.
   const body = rows
     .map(
       (c) => `
@@ -47,6 +54,7 @@ function categoryTable(doc, summary, month, cur) {
         <td>${summary.expenses ? Math.round((uncategorized / summary.expenses) * 100) : 0} %</td></tr>`
     : '';
 
+  // HTML: Kopf mit Monat, dann die Tabelle in einem scrollbaren Container oder ein Leertext.
   return `
     <section class="card table-section full" aria-label="Kategorien im Detail">
       <div class="card-head">

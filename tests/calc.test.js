@@ -1,3 +1,4 @@
+// Unit-Tests für die Rechenlogik in public/js/calc.js. Ausführen mit npm test (node:test, ohne zusätzliche Bibliothek).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -15,12 +16,15 @@ import {
   history,
 } from '../public/js/calc.js';
 
+// Kurzschreibweisen, um Test-Buchungen in einer Zeile anzulegen. extra überschreibt einzelne Felder.
 const income = (id, amount, date) => ({ id, type: 'income', amount, categoryId: null, note: '', date, recurringId: null });
 const expense = (id, amount, date, extra = {}) => ({ id, type: 'expense', amount, categoryId: 'essen', note: '', date, recurringId: null, ...extra });
 
+// Vorhersagbare IDs statt Zufall, damit die Tests bei jedem Lauf gleich ablaufen.
 let counter = 0;
 const newId = () => `id-${++counter}`;
 
+// Minimales Test-Dokument: zwei Kategorien mit zusammen 1400 Budget. overrides ersetzt einzelne Felder.
 function makeDoc(overrides = {}) {
   return {
     version: 1,
@@ -38,8 +42,11 @@ function makeDoc(overrides = {}) {
   };
 }
 
+// Zwei wiederkehrende Einträge ab Juli 2026, noch nie gebucht.
 const salary = { id: 'r-gehalt', kind: 'salary', title: 'Gehalt', amount: 2500, categoryId: null, active: true, startMonth: '2026-07', lastBooked: null };
 const rent = { id: 'r-miete', kind: 'fixed', title: 'Miete', amount: 900, categoryId: 'wohnen', active: true, startMonth: '2026-07', lastBooked: null };
+
+// ---------- Monate und Datum ----------
 
 test('addMonths über Jahresgrenzen', () => {
   assert.equal(addMonths('2026-12', 1), '2027-01');
@@ -47,12 +54,16 @@ test('addMonths über Jahresgrenzen', () => {
   assert.equal(addMonths('2026-09', 15), '2027-12');
 });
 
+// 24.9. bis 30.9. inklusive heute = 7 Tage, Vormonat 0, Oktober komplett 31.
 test('daysLeft zählt heute mit', () => {
   assert.equal(daysLeft('2026-09', '2026-09-24'), 7);
   assert.equal(daysLeft('2026-08', '2026-09-24'), 0);
   assert.equal(daysLeft('2026-10', '2026-09-24'), 31);
 });
 
+// ---------- Wiederkehrende Buchungen (FR-07 / FR-08) ----------
+
+// Juli bis September = 3 Monate x 2 Einträge = 6 Buchungen, jeweils am 1.
 test('applyRecurring bucht über 3 Monate genau einmal pro Monat', () => {
   const doc = makeDoc({ recurring: [salary, rent] });
   const { doc: after, created } = applyRecurring(doc, '2026-09-24', newId);
@@ -66,6 +77,7 @@ test('applyRecurring bucht über 3 Monate genau einmal pro Monat', () => {
   assert.ok(after.recurring.every((r) => r.lastBooked === '2026-09'));
 });
 
+// Zweiter Aufruf im selben Monat darf nichts buchen und muss dasselbe doc-Objekt zurückgeben.
 test('applyRecurring ist idempotent', () => {
   const first = applyRecurring(makeDoc({ recurring: [salary, rent] }), '2026-09-24', newId).doc;
   const second = applyRecurring(first, '2026-09-30', newId);
@@ -73,6 +85,7 @@ test('applyRecurring ist idempotent', () => {
   assert.equal(second.doc, first);
 });
 
+// Seit dem letzten Aufruf ist Oktober dazugekommen: genau eine Buchung am 1.10.
 test('applyRecurring holt einen neuen Monat nach', () => {
   const first = applyRecurring(makeDoc({ recurring: [salary] }), '2026-09-24', newId).doc;
   const { created } = applyRecurring(first, '2026-10-02', newId);
@@ -80,6 +93,7 @@ test('applyRecurring holt einen neuen Monat nach', () => {
   assert.equal(created[0].date, '2026-10-01');
 });
 
+// Pausierte Monate werden übersprungen (lastBooked rückt trotzdem vor). Nach dem Fortsetzen erst ab dem nächsten Monat buchen.
 test('pausierte Einträge buchen nicht und holen später nicht nach', () => {
   const paused = { ...rent, active: false };
   const { doc, created } = applyRecurring(makeDoc({ recurring: [paused] }), '2026-09-24', newId);
@@ -90,6 +104,9 @@ test('pausierte Einträge buchen nicht und holen später nicht nach', () => {
   assert.equal(applyRecurring(resumed, '2026-10-01', newId).created.length, 1);
 });
 
+// ---------- Monatsauswertung und Status ----------
+
+// verfügbar = Übertrag (-999) + Einnahmen (2500) - Ausgaben (1020,5) = 480,5. Limit = 1000 + 400 = 1400.
 test('monthSummary: Kontostand-Modell', () => {
   const doc = makeDoc({
     transactions: [
@@ -120,6 +137,7 @@ test('Budget-Override gilt nur für seinen Monat', () => {
   assert.equal(monthSummary(doc, '2026-10').limit, 1400);
 });
 
+// Warnschwelle 0,9 x 1400 = 1260: Genau 1400 ist warn, erst 1400,01 ist über Budget.
 test('Status: genau am Limit ist nicht drüber, aber Warnung', () => {
   const tx = (amount) => ({ id: 'x', type: 'expense', amount, categoryId: 'essen', note: '', date: '2026-09-05', recurringId: null });
   const income = { id: 'i', type: 'income', amount: 5000, categoryId: null, note: '', date: '2026-09-01', recurringId: null };
@@ -129,6 +147,7 @@ test('Status: genau am Limit ist nicht drüber, aber Warnung', () => {
   assert.equal(monthSummary(makeDoc({ transactions: [income, tx(1000)] }), '2026-09').status, 'ok');
 });
 
+// Nur eine Ausgabe, keine Einnahme: verfügbar ist negativ, deshalb over, obwohl das Budget nicht überschritten ist.
 test('Status over, wenn verfügbar negativ ist', () => {
   const doc = makeDoc({
     transactions: [{ id: 'x', type: 'expense', amount: 50, categoryId: 'essen', note: '', date: '2026-09-05', recurringId: null }],
@@ -138,6 +157,9 @@ test('Status over, wenn verfügbar negativ ist', () => {
   assert.equal(s.status, 'over');
 });
 
+// ---------- Benachrichtigung, Kategorien, Diagramm, Export ----------
+
+// Nur der Wechsel von "nicht drüber" zu "drüber" löst aus (FR-09), und nur, wenn der Monat noch nicht gemeldet wurde.
 test('shouldNotifyOverBudget nur beim ersten Überschreiten', () => {
   const doc = makeDoc();
   const under = { month: '2026-09', overBudget: false };
@@ -147,6 +169,7 @@ test('shouldNotifyOverBudget nur beim ersten Überschreiten', () => {
   assert.equal(shouldNotifyOverBudget(under, over, { ...doc, overBudgetNotified: { '2026-09': true } }), false);
 });
 
+// Wohnen 950 von 1000 = 95 % (warn), Essen 450 von 400 = drüber, pct bei 100 gedeckelt.
 test('categoryRows: übrig, Warnung, drüber', () => {
   const doc = makeDoc();
   const rows = categoryRows(doc, { spentByCategory: { wohnen: 950, essen: 450 } });
@@ -161,6 +184,7 @@ test('categoryRows: ohne Budget kein "drüber"', () => {
   assert.equal(row.pct, 0);
 });
 
+// Bei 1800 Einkommen z. B. Wohnen 30 % = 540. Die Anteile der Standardkategorien ergeben zusammen 100 %.
 test('suggestBudgets: 50/30/20 nach Kategorienamen, eigene Kategorien ohne Vorschlag', () => {
   const cats = ['Wohnen', 'Essen', 'Mobilität', 'Freizeit', 'Sparen', 'Sonstiges', 'Haustier'].map((name) => ({ id: name, name }));
   const s = suggestBudgets(cats, 1800);
@@ -169,6 +193,7 @@ test('suggestBudgets: 50/30/20 nach Kategorienamen, eigene Kategorien ohne Vorsc
   assert.equal(Object.values(s).reduce((a, b) => a + b, 0), 1800);
 });
 
+// Zwei Budgetbögen (je Kategorie) plus ein Ausgabenbogen für Essen. Ohne Kategorien gibt es keine Bögen.
 test('donutArcs: je Kategorie Budget- und Ausgabenbogen', () => {
   const doc = makeDoc();
   const arcs = donutArcs(doc, { spentByCategory: { essen: 100 } });
@@ -177,6 +202,7 @@ test('donutArcs: je Kategorie Budget- und Ausgabenbogen', () => {
   assert.equal(donutArcs(makeDoc({ categories: [] }), { spentByCategory: {} }).length, 0);
 });
 
+// Eine Notiz mit Semikolon muss in Anführungszeichen stehen, sonst würde sie als zwei Spalten gelesen.
 test('CSV-Export mit Semikolon und Escaping', () => {
   const doc = makeDoc({
     transactions: [{ id: 'x', type: 'expense', amount: 9.5, categoryId: 'essen', note: 'Pizza; groß', date: '2026-09-05', recurringId: null }],
@@ -212,6 +238,7 @@ test('Übertrag ausgeschaltet', () => {
   assert.equal(carryIn(doc, '2026-09'), 0);
 });
 
+// August -100, September +50: verfügbar -50, Status over, aber das Budget selbst ist nicht überschritten.
 test('Negativer Übertrag färbt den neuen Monat rot', () => {
   const doc = makeDoc({ transactions: [expense('a', 100, '2026-08-03'), income('b', 50, '2026-09-01')] });
   const s = monthSummary(doc, '2026-09');

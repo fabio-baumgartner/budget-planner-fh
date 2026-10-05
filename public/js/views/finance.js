@@ -1,14 +1,18 @@
+// Finance Manager (#finance): Kennzahlen des Monats, Liste aller Buchungen mit Filter,
+// dazu Gehalt und Fixkosten (wiederkehrende Buchungen, FR-05 bis FR-08).
 import { transactionsOfMonth, round } from '../calc.js';
 import { esc, money, moneyWithSymbol, signedMoney, monthLabel, dateLabel } from '../format.js';
 import { icons } from '../icons.js';
 import { pageHead, categoryIcon, categoryMap, displayCategory, swatch, NO_CATEGORY, INCOME_COLOR } from './shared.js';
 
+// Filter-Chips als [Wert, Beschriftung]. Der Wert landet in ui.filter (app.js).
 const FILTERS = [
   ['all', 'Alle'],
   ['expense', 'Ausgaben'],
   ['income', 'Einnahmen'],
 ];
 
+// Rendert die Ansicht als HTML-String: Kopf, vier Kennzahl-Kacheln (KPIs), Buchungen, Gehalt und Fixkosten.
 export function renderFinance({ doc, month, currentMonth, summary, filter }) {
   const cur = doc.settings.currency;
   return `
@@ -28,6 +32,8 @@ export function renderFinance({ doc, month, currentMonth, summary, filter }) {
     </div>`;
 }
 
+// Buchungsliste des Monats, gefiltert nach Typ. Klick auf eine Zeile öffnet die Buchung zum Bearbeiten.
+// Automatisch gebuchte Einträge (mit recurringId) bekommen das Badge "Auto".
 function transactions(doc, month, filter, cur) {
   const cats = categoryMap(doc);
   const all = transactionsOfMonth(doc, month);
@@ -52,10 +58,12 @@ function transactions(doc, month, filter, cur) {
     })
     .join('');
 
+  // Leertext unterscheidet: Monat ganz leer oder nur der Filter passt nicht.
   const emptyText = all.length
     ? 'Keine Buchungen für diesen Filter.'
     : 'Keine Buchungen in diesem Monat. Über „Einnahme“ und „Ausgabe“ fügst du welche hinzu.';
 
+  // HTML: Filter-Chips mit Anzahl, Tabellenkopf, Zeilen oder Leertext.
   return `
     <section class="section" aria-label="Buchungen">
       <div class="section-head">
@@ -74,6 +82,8 @@ function transactions(doc, month, filter, cur) {
     </section>`;
 }
 
+// Gehalt und Fixkosten: Gehälter zuerst, sonst alphabetisch.
+// Die Summen zählen nur aktive Einträge, pausierte werden zwar angezeigt, aber nicht mitgerechnet.
 function recurring(doc, cur) {
   const cats = categoryMap(doc);
   const sorted = [...doc.recurring].sort((a, b) => (a.kind === b.kind ? a.title.localeCompare(b.title) : a.kind === 'salary' ? -1 : 1));
@@ -97,6 +107,7 @@ function recurring(doc, cur) {
     })
     .join('');
 
+  // HTML: Überschrift, Buttons für neues Gehalt / neue Fixkosten, Liste mit Summen oder Leertext.
   return `
     <section class="card rec-card" aria-label="Gehalt und Fixkosten">
       <div>

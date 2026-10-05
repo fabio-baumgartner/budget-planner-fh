@@ -1,3 +1,4 @@
+// Unit-Tests für displayColor() aus public/js/format.js (Anzeigefarben der Kategorien).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { displayColor } from '../public/js/format.js';
@@ -9,6 +10,7 @@ test('displayColor: alte Standardfarben bekommen ein festes Pastell-Gegenstück'
   assert.equal(displayColor('#808080'), '#E6DFD3');
 });
 
+// Diese Farben sind schon hell genug für schwarze Schrift und dürfen nicht verändert werden.
 test('displayColor: helle Farben bleiben unverändert', () => {
   assert.equal(displayColor('#FFE58F'), '#FFE58F');
   assert.equal(displayColor('#D9C8FF'), '#D9C8FF');

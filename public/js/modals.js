@@ -9,8 +9,12 @@ const PALETTE = ['#BDE3FF', '#B8F2D0', '#FFE58F', '#D9C8FF', '#FFC2B4', '#E6DFD3
 
 // ---------- FR-09: Änderung übernehmen und bei erster Überschreitung warnen ----------
 
+// Führt eine Änderung aus (wie store.update) und prüft danach für jeden betroffenen Monat,
+// ob er dadurch zum ersten Mal über das Budget rutscht. Dann einmal warnen und das in overBudgetNotified merken.
+// months: Monate, die die Änderung betreffen kann (Duplikate werden entfernt).
 function commit(months, mutate) {
   const unique = [...new Set(months)];
+  // Zustand vor der Änderung festhalten, danach mit dem neuen vergleichen.
   const before = unique.map((m) => monthSummary(getDoc(), m));
   update(mutate);
   unique.forEach((month, i) => {
@@ -24,6 +28,7 @@ function commit(months, mutate) {
   });
 }
 
+// Beim App-Start: Ist der Monat schon über Budget und wurde noch nicht gewarnt, jetzt einmal warnen.
 export function checkOverBudgetOnLoad(month) {
   const doc = getDoc();
   const summary = monthSummary(doc, month);
@@ -37,6 +42,7 @@ export function checkOverBudgetOnLoad(month) {
 
 // ---------- Bausteine ----------
 
+// Betragsfeld mit Währungssymbol als HTML. Der Wert wird mit Komma angezeigt (12,50).
 function amountField(value, cur) {
   return `
     <div class="amount-field">
@@ -45,6 +51,7 @@ function amountField(value, cur) {
     </div>`;
 }
 
+// Kategorien als auswählbare Chips (Radio-Gruppe) als HTML, oder ein Hinweis, wenn es noch keine gibt.
 function categoryChips(categories, selectedId) {
   if (!categories.length) return '<p class="modal-text">Noch keine Kategorien. Lege im Dashboard eine an.</p>';
   return `<div class="chips" role="radiogroup" aria-label="Kategorie">
@@ -57,6 +64,7 @@ function categoryChips(categories, selectedId) {
   </div>`;
 }
 
+// Macht eine Chip-Gruppe klickbar: genau ein Chip ist aktiv, onSelect bekommt den Wert aus data-<attr>.
 function bindChips(modal, selector, attr, onSelect) {
   modal.querySelectorAll(selector).forEach((chip) => {
     chip.addEventListener('click', () => {
@@ -69,6 +77,7 @@ function bindChips(modal, selector, attr, onSelect) {
   });
 }
 
+// Zeigt eine Fehlermeldung im Formular an. Leerer Text blendet sie aus.
 function formError(modal, message) {
   const el = modal.querySelector('.form-error');
   el.textContent = message;
@@ -77,16 +86,22 @@ function formError(modal, message) {
 
 // ---------- Buchung (FR-01, FR-03) ----------
 
+// Dialog zum Anlegen (ohne id) oder Bearbeiten (mit id) einer Buchung.
+// type: Vorauswahl Ausgabe oder Einnahme beim Anlegen.
 export function openTransactionModal({ type = 'expense', id } = {}) {
   const doc = getDoc();
   const cur = doc.settings.currency;
   const existing = id ? doc.transactions.find((t) => t.id === id) : null;
+  // Stammt die Buchung aus Gehalt oder Fixkosten? Dann steht unten ein Hinweis.
   const recurringSource = existing?.recurringId ? doc.recurring.find((r) => r.id === existing.recurringId) : null;
+  // Lokaler Zustand des Dialogs: gewählte Art und Kategorie (neue Buchung: erste Kategorie vorausgewählt).
   const state = {
     type: existing?.type || type,
     categoryId: existing ? existing.categoryId : doc.categories[0]?.id ?? null,
   };
 
+  // HTML des Formulars: Umschalter Ausgabe/Einnahme, Betrag, Kategorie (nur bei Ausgaben), Notiz, Datum,
+  // Hinweis bei automatischer Buchung, Fehlerzeile und Buttons (Löschen nur beim Bearbeiten).
   const body = `
     <form class="modal-form" novalidate style="display:contents">
       <div class="segmented" role="radiogroup" aria-label="Art der Buchung">
@@ -119,6 +134,7 @@ export function openTransactionModal({ type = 'expense', id } = {}) {
       const note = form.elements.note;
       const saveButton = modal.querySelector('[data-save]');
 
+      // Passt das Formular an die gewählte Art an: Kategorie ein-/ausblenden, Platzhalter und Button-Text.
       const refresh = () => {
         const isExpense = state.type === 'expense';
         modal.querySelector('[data-expense-only]').hidden = !isExpense;
@@ -128,6 +144,7 @@ export function openTransactionModal({ type = 'expense', id } = {}) {
       };
       refresh();
 
+      // Umschalter Ausgabe / Einnahme
       modal.querySelectorAll('[data-type]').forEach((button) =>
         button.addEventListener('click', () => {
           state.type = button.dataset.type;
@@ -136,10 +153,12 @@ export function openTransactionModal({ type = 'expense', id } = {}) {
       );
       bindChips(modal, '[data-cat]', 'cat', (value) => (state.categoryId = value));
 
+      // Speichern: Eingaben prüfen, Buchung zusammenbauen und über commit() speichern (inkl. Budget-Warnung FR-09).
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const amount = parseAmount(form.elements.amount.value);
         const date = form.elements.date.value;
+        // !(amount > 0) erwischt auch NaN, also eine ungültige Eingabe.
         if (!(amount > 0)) return formError(modal, 'Bitte gib einen gültigen Betrag an, z. B. 12,50.');
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return formError(modal, 'Bitte wähle ein Datum.');
 
@@ -147,12 +166,15 @@ export function openTransactionModal({ type = 'expense', id } = {}) {
           id: existing?.id || newId(),
           type: state.type,
           amount,
+          // Einnahmen haben keine Kategorie.
           categoryId: state.type === 'expense' ? state.categoryId : null,
           note: note.value.trim(),
           date,
           recurringId: existing?.recurringId || null,
         };
+        // Betroffen ist der Monat des neuen Datums und beim Bearbeiten auch der alte Monat.
         const months = [monthOf(date), ...(existing ? [monthOf(existing.date)] : [])];
+        // Bearbeiten: Buchung ersetzen. Neu: vorne in die Liste einfügen.
         commit(months, (d) => {
           if (existing) d.transactions = d.transactions.map((t) => (t.id === tx.id ? tx : t));
           else d.transactions.unshift(tx);
@@ -161,6 +183,7 @@ export function openTransactionModal({ type = 'expense', id } = {}) {
         toast(existing ? 'Buchung gespeichert' : tx.type === 'expense' ? 'Ausgabe gespeichert' : 'Einnahme gespeichert', 'success');
       });
 
+      // Löschen: erst diesen Dialog schließen (es gibt nur ein Modal gleichzeitig), dann Bestätigung abfragen.
       modal.querySelector('[data-delete]')?.addEventListener('click', async () => {
         close();
         const ok = await confirmModal({
@@ -181,12 +204,15 @@ export function openTransactionModal({ type = 'expense', id } = {}) {
 
 // ---------- Kategorie (FR-02) ----------
 
+// Dialog für eine Kategorie (FR-02). viewMonth: angezeigter Monat, für die Budget-Warnung in commit().
+// Neue Kategorien bekommen reihum die nächste Farbe aus PALETTE.
 export function openCategoryModal({ id, viewMonth } = {}) {
   const doc = getDoc();
   const cur = doc.settings.currency;
   const existing = id ? doc.categories.find((c) => c.id === id) : null;
   const state = { color: existing?.color || PALETTE[doc.categories.length % PALETTE.length] };
 
+  // HTML: Vorschau-Icon mit Initiale, Name, Budget pro Monat, Farbauswahl, Fehlerzeile, Buttons.
   const body = `
     <form novalidate style="display:contents">
       <div class="row" style="gap:14px">
@@ -220,6 +246,7 @@ export function openCategoryModal({ id, viewMonth } = {}) {
     onMount(modal, close) {
       const form = modal.querySelector('form');
       const preview = modal.querySelector('[data-preview]');
+      // Vorschau-Icon live aktualisieren (Initiale des Namens und Farbe).
       const refresh = () => {
         preview.textContent = initial(form.elements.name.value);
         preview.style.setProperty('--c', displayColor(state.color));
@@ -234,8 +261,10 @@ export function openCategoryModal({ id, viewMonth } = {}) {
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const name = form.elements.name.value.trim();
+        // Leeres Budget-Feld bedeutet 0 (Kategorie ohne Budget).
         const budget = form.elements.budget.value.trim() === '' ? 0 : parseAmount(form.elements.budget.value);
         if (!name) return formError(modal, 'Bitte gib einen Namen an.');
+        // Name darf nicht doppelt vorkommen (Groß-/Kleinschreibung egal), außer es ist dieselbe Kategorie.
         const duplicate = getDoc().categories.some((c) => c.id !== existing?.id && c.name.toLowerCase() === name.toLowerCase());
         if (duplicate) return formError(modal, 'Diese Kategorie gibt es schon.');
         if (!(budget >= 0)) return formError(modal, 'Bitte gib ein gültiges Budget an, z. B. 200.');
@@ -251,6 +280,7 @@ export function openCategoryModal({ id, viewMonth } = {}) {
         toast(existing ? 'Kategorie gespeichert' : `Kategorie „${name}“ angelegt`, 'success');
       });
 
+      // Löschen: Buchungen und Fixkosten dieser Kategorie bleiben erhalten und verlieren nur die Zuordnung.
       modal.querySelector('[data-delete]')?.addEventListener('click', async () => {
         close();
         const used = getDoc().transactions.filter((t) => t.categoryId === existing.id).length;
@@ -280,15 +310,19 @@ export function openCategoryModal({ id, viewMonth } = {}) {
 
 // ---------- Gehalt und Fixkosten (FR-05, FR-06, FR-07, FR-08) ----------
 
+// Dialog für Gehalt (kind 'salary') oder Fixkosten (kind 'fixed'), FR-05 bis FR-08.
+// Neue Einträge starten im aktuellen Monat. Die eigentliche Buchung erzeugt applyRecurring() in store.update().
 export function openRecurringModal({ kind = 'fixed', id } = {}) {
   const doc = getDoc();
   const cur = doc.settings.currency;
   const existing = id ? doc.recurring.find((r) => r.id === id) : null;
   const entryKind = existing?.kind || kind;
   const isSalary = entryKind === 'salary';
+  // Fixkosten: Kategorie "Wohnen" vorauswählen, falls vorhanden, sonst die erste.
   const state = { categoryId: existing ? existing.categoryId : (doc.categories.find((c) => c.name === 'Wohnen') || doc.categories[0])?.id ?? null };
   const label = isSalary ? 'Gehalt' : 'Fixkosten';
 
+  // HTML: Betrag, Bezeichnung, Kategorie (nur Fixkosten), Aktiv-Schalter (nur beim Bearbeiten), Hinweistext, Buttons.
   const body = `
     <form novalidate style="display:contents">
       ${amountField(existing?.amount, cur)}
@@ -316,6 +350,7 @@ export function openRecurringModal({ kind = 'fixed', id } = {}) {
     body,
     onMount(modal, close) {
       const form = modal.querySelector('form');
+      // Kategorie-Chips gibt es nur bei Fixkosten, beim Gehalt findet bindChips einfach nichts.
       bindChips(modal, '[data-cat]', 'cat', (value) => (state.categoryId = value));
 
       form.addEventListener('submit', (event) => {
@@ -325,6 +360,8 @@ export function openRecurringModal({ kind = 'fixed', id } = {}) {
         if (!(amount > 0)) return formError(modal, 'Bitte gib einen gültigen Betrag an.');
         if (!title) return formError(modal, 'Bitte gib eine Bezeichnung an.');
 
+        // Neuer Eintrag: lastBooked null, damit applyRecurring ab startMonth bucht.
+        // Beim Bearbeiten bleibt lastBooked erhalten, darum ändern sich bereits gebuchte Monate nicht.
         const month = monthOf(todayIso());
         const entry = existing
           ? { ...existing, title, amount, categoryId: isSalary ? null : state.categoryId, active: form.elements.active.checked }
@@ -342,6 +379,7 @@ export function openRecurringModal({ kind = 'fixed', id } = {}) {
         }
       });
 
+      // Löschen entfernt nur die Vorlage. Bereits erzeugte Buchungen bleiben bestehen.
       modal.querySelector('[data-delete]')?.addEventListener('click', async () => {
         close();
         const ok = await confirmModal({
@@ -362,12 +400,16 @@ export function openRecurringModal({ kind = 'fixed', id } = {}) {
 
 // ---------- Monatsbudget (FR-04) ----------
 
+// Dialog für das Budget-Limit eines Monats (FR-04). Ein eigener Wert landet in budgetOverrides[month],
+// ohne eigenen Wert gilt die Summe der Kategorie-Budgets.
 export function openBudgetModal(month) {
   const doc = getDoc();
   const cur = doc.settings.currency;
   const override = doc.budgetOverrides[month];
   const categoryTotal = categoryBudgetTotal(doc);
 
+  // Body-HTML: Betragsfeld (vorbelegt mit eigenem Wert oder Kategorie-Summe), Erklärung, Buttons.
+  // Der Zurücksetzen-Button erscheint nur, wenn es einen eigenen Wert gibt.
   openModal({
     title: `Budget ${monthLabel(month)}`,
     body: `
@@ -392,6 +434,7 @@ export function openBudgetModal(month) {
         close();
         toast('Budget gespeichert', 'success');
       });
+      // Zurücksetzen: eigenen Wert löschen, dann gilt wieder die Summe der Kategorien.
       modal.querySelector('[data-reset]')?.addEventListener('click', () => {
         commit([month], (d) => {
           delete d.budgetOverrides[month];
@@ -405,17 +448,21 @@ export function openBudgetModal(month) {
 
 // ---------- Budgets je Kategorie festlegen (alle auf einmal) ----------
 
+// Dialog, um die Budgets aller Kategorien auf einmal festzulegen.
+// afterSalary: true, wenn der Dialog direkt nach dem ersten Gehalt aufgeht (anderer Einleitungstext).
 export function openBudgetsModal({ afterSalary = false } = {}) {
   const doc = getDoc();
   const cur = doc.settings.currency;
   const month = monthOf(todayIso());
   if (!doc.categories.length) return toast('Lege zuerst eine Kategorie an.', 'info');
 
+  // Basis für den 50/30/20-Vorschlag: Summe der aktiven Gehälter, sonst die Einnahmen des aktuellen Monats.
   const salaryTotal = doc.recurring.filter((r) => r.kind === 'salary' && r.active).reduce((s, r) => s + r.amount, 0);
   const income = salaryTotal || monthSummary(doc, month).income;
   const incomeLabel = salaryTotal ? 'Gehalt pro Monat' : `Einnahmen ${monthLabel(month)}`;
   const override = doc.budgetOverrides[month];
 
+  // Eine Eingabezeile pro Kategorie (HTML-String). data-id verbindet das Feld mit der Kategorie.
   const rows = doc.categories
     .map(
       (c) => `
@@ -433,6 +480,8 @@ export function openBudgetsModal({ afterSalary = false } = {}) {
     ? 'Dein Gehalt ist angelegt. Lege jetzt fest, wie viel du pro Monat für jede Kategorie einplanst.'
     : 'Lege fest, wie viel du pro Monat für jede Kategorie einplanst. Zusammen ergibt das dein Budget-Limit.';
 
+  // Body-HTML: Einleitung, Vorschlag-Button, Eingabezeilen, Summen (Budget-Limit, Einkommen, bleibt frei)
+  // und ein Hinweis, falls für den Monat ein eigenes Limit gilt.
   openModal({
     title: 'Budgets festlegen',
     body: `
@@ -460,8 +509,10 @@ export function openBudgetsModal({ afterSalary = false } = {}) {
     onMount(modal, close) {
       const form = modal.querySelector('form');
       const inputs = [...modal.querySelectorAll('[data-id]')];
+      // Leeres Feld zählt als 0, eine ungültige Eingabe ergibt NaN.
       const valueOf = (input) => (input.value.trim() === '' ? 0 : parseAmount(input.value));
 
+      // Summe und "Bleibt frei" bei jeder Eingabe live neu berechnen. Nachkommastellen nur, wenn nötig.
       const refresh = () => {
         const sum = inputs.reduce((s, input) => s + (valueOf(input) || 0), 0);
         modal.querySelector('[data-sum]').textContent = moneyWithSymbol(sum, cur, sum % 1 ? 2 : 0);
@@ -471,6 +522,7 @@ export function openBudgetsModal({ afterSalary = false } = {}) {
       refresh();
       inputs.forEach((input) => input.addEventListener('input', refresh));
 
+      // Vorschlag nach 50/30/20 eintragen. Nur Standardkategorien (z. B. Wohnen, Essen) bekommen einen Wert.
       modal.querySelector('[data-suggest]').addEventListener('click', () => {
         const suggestion = suggestBudgets(getDoc().categories, income);
         inputs.forEach((input) => {
@@ -479,6 +531,7 @@ export function openBudgetsModal({ afterSalary = false } = {}) {
         refresh();
       });
 
+      // Speichern: alle Felder prüfen, beim ersten ungültigen abbrechen und den Fokus dorthin setzen.
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const budgets = {};
@@ -504,6 +557,7 @@ export function openBudgetsModal({ afterSalary = false } = {}) {
 
 // ---------- Profil-Einstellungen ----------
 
+// Dialog zum Ändern des Anzeigenamens im Profil.
 export function openNameModal() {
   const doc = getDoc();
   openModal({
@@ -529,6 +583,8 @@ export function openNameModal() {
   });
 }
 
+// Allgemeiner Auswahl-Dialog (z. B. Währung, Warnschwelle). options: Liste aus [Wert, Beschriftung].
+// onPick bekommt den gewählten Wert als String, danach schließt der Dialog.
 export function openChoiceModal({ title, options, current, onPick }) {
   openModal({
     title,

@@ -3,18 +3,24 @@
 
 // ---------- Monate und Datum ----------
 
+// Monat eines ISO-Datums: '2026-09-24' -> '2026-09'.
 export function monthOf(isoDate) {
   return isoDate.slice(0, 7);
 }
 
+// Monat um n verschieben (n darf negativ sein): addMonths('2026-12', 1) -> '2027-01'.
 export function addMonths(month, n) {
   const [y, m] = month.split('-').map(Number);
+  // Trick: alles in Monate seit Jahr 0 umrechnen, n addieren und wieder in Jahr und Monat zerlegen.
+  // So klappen Jahreswechsel automatisch. m - 1, weil der Rest der Division (% 12) von 0 bis 11 geht.
   const total = y * 12 + (m - 1) + n;
   return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`;
 }
 
+// Anzahl Tage eines Monats, z. B. '2026-02' -> 28.
 export function daysInMonth(month) {
   const [y, m] = month.split('-').map(Number);
+  // Date.UTC zählt Monate ab 0, m ist also schon der Folgemonat. Tag 0 davon = letzter Tag des gewünschten Monats.
   return new Date(Date.UTC(y, m, 0)).getUTCDate();
 }
 
@@ -34,18 +40,24 @@ export function daysLeft(month, todayIso) {
 // - verpasste Monate (App länger nicht geöffnet) werden nachgebucht
 // - pausierte Einträge (active: false) überspringen ihre Monate
 // - eine manuell gelöschte Auto-Buchung kommt nicht zurück
+// newId: Funktion, die eine neue eindeutige ID liefert (in den Tests ein Zähler).
+// Rückgabe: { doc, created }. Gab es nichts zu tun, ist doc dasselbe Objekt wie vorher (store.js speichert dann nicht).
 export function applyRecurring(doc, todayIso, newId) {
   const current = monthOf(todayIso);
   const created = [];
   const recurring = doc.recurring.map((entry) => {
+    // Ab dem Monat nach lastBooked weitermachen, bei neuen Einträgen ab startMonth.
     let month = entry.lastBooked ? addMonths(entry.lastBooked, 1) : entry.startMonth;
     let lastBooked = entry.lastBooked;
+    // Monate im Format 'JJJJ-MM' lassen sich direkt als Text vergleichen.
     while (month <= current) {
+      // Pausierte Einträge buchen nichts, lastBooked rückt aber trotzdem weiter.
       if (entry.active) {
         created.push({
           id: newId(),
           type: entry.kind === 'salary' ? 'income' : 'expense',
           amount: entry.amount,
+          // Gehalt hat keine Kategorie.
           categoryId: entry.kind === 'salary' ? null : entry.categoryId,
           note: entry.title,
           date: `${month}-01`,
@@ -55,14 +67,17 @@ export function applyRecurring(doc, todayIso, newId) {
       lastBooked = month;
       month = addMonths(month, 1);
     }
+    // Unverändertes Objekt zurückgeben, wenn nichts gebucht wurde (wichtig für den Vergleich unten).
     return lastBooked === entry.lastBooked ? entry : { ...entry, lastBooked };
   });
   if (!created.length && recurring.every((r, i) => r === doc.recurring[i])) return { doc, created };
+  // Neue Buchungen vorne anhängen. doc selbst wird nicht verändert, sondern kopiert.
   return { doc: { ...doc, recurring, transactions: [...created, ...doc.transactions] }, created };
 }
 
 // ---------- Monatsauswertung (Kontostand-Modell) ----------
 
+// Summe aller Kategorie-Budgets.
 export function categoryBudgetTotal(doc) {
   return doc.categories.reduce((sum, c) => sum + c.budget, 0);
 }
@@ -72,6 +87,7 @@ export function budgetLimit(doc, month) {
   return doc.budgetOverrides[month] ?? categoryBudgetTotal(doc);
 }
 
+// Alle Buchungen eines Monats, neueste zuerst.
 export function transactionsOfMonth(doc, month) {
   return doc.transactions
     .filter((t) => monthOf(t.date) === month)
@@ -84,6 +100,7 @@ export function monthlyTotals(doc) {
   const totals = {};
   for (const t of doc.transactions) {
     const m = monthOf(t.date);
+    // ||= legt den Eintrag für diesen Monat an, falls es ihn noch nicht gibt.
     const entry = (totals[m] ||= { income: 0, expenses: 0, variable: 0 });
     if (t.type === 'income') {
       entry.income += t.amount;
@@ -92,6 +109,7 @@ export function monthlyTotals(doc) {
       if (!t.recurringId) entry.variable += t.amount;
     }
   }
+  // Erst am Ende auf Cent runden. Das entfernt Gleitkomma-Reste wie 0.1 + 0.2 = 0.30000000000000004.
   for (const entry of Object.values(totals)) {
     entry.income = round(entry.income);
     entry.expenses = round(entry.expenses);
@@ -102,7 +120,9 @@ export function monthlyTotals(doc) {
 
 // Übertrag: Summe aus (Einnahmen − Ausgaben) aller Monate vor dem gewählten Monat,
 // also der Kontostand am Monatsanfang. Kann auch negativ sein.
+// totals kann man mitgeben, wenn monthlyTotals() schon berechnet wurde. Sonst wird es hier berechnet.
 export function carryIn(doc, month, totals = monthlyTotals(doc)) {
+  // Übertrag im Profil abgeschaltet: Jeder Monat startet bei 0.
   if (doc.settings.carryOver === false) return 0;
   let sum = 0;
   for (const [m, t] of Object.entries(totals)) {
@@ -111,6 +131,8 @@ export function carryIn(doc, month, totals = monthlyTotals(doc)) {
   return round(sum);
 }
 
+// Kennzahlen eines Monats für Dashboard und Warnungen: Einnahmen, Ausgaben, Übertrag, verfügbar, Limit,
+// Auslastung (ratio = Ausgaben / Limit) und Status. spentByCategory: Ausgaben je Kategorie-ID, ohne Kategorie unter 'none'.
 export function monthSummary(doc, month) {
   let income = 0;
   let expenses = 0;
@@ -132,6 +154,7 @@ export function monthSummary(doc, month) {
   const overBudget = limit > 0 && expenses > limit; // FR-09
   const negative = available < 0;
   const ratio = limit > 0 ? expenses / limit : 0;
+  // over: Budget überschritten oder Kontostand negativ. warn: ab der Warnschwelle (z. B. 90 %). Sonst ok.
   const status = overBudget || negative ? 'over' : ratio >= doc.settings.warnAt ? 'warn' : 'ok';
   return { month, carryIn: carry, income, expenses, available, limit, ratio, overBudget, negative, status, spentByCategory };
 }
@@ -148,15 +171,18 @@ export function forecastMonth(doc, month, todayIso) {
   if (month !== monthOf(todayIso)) return null;
 
   const days = daysInMonth(month);
+  // Heutiger Tag im Monat = vergangene Tage inklusive heute.
   const elapsed = Number(todayIso.slice(8, 10));
   let fixed = 0;
   let variable = 0;
   for (const t of transactionsOfMonth(doc, month)) {
     if (t.type !== 'expense') continue;
+    // Datum nach heute = schon eingetragene, geplante Buchung. Sie steht fest und wird deshalb nicht hochgerechnet.
     if (t.recurringId || t.date > todayIso) fixed += t.amount;
     else variable += t.amount;
   }
 
+  // Bisheriges Tagestempo mal Tage im Monat.
   const extrapolated = (variable / elapsed) * days;
 
   // Durchschnitt der variablen Ausgaben der letzten bis zu 3 Monate, die Buchungen haben.
@@ -168,6 +194,7 @@ export function forecastMonth(doc, month, todayIso) {
   }
   const historyAverage = previous.length ? previous.reduce((a, b) => a + b, 0) / previous.length : null;
 
+  // Gewicht wächst mit dem Monat: am Anfang zählt der Durchschnitt der Vormonate, gegen Ende das aktuelle Tempo.
   const weight = elapsed / days;
   const blended = historyAverage === null ? extrapolated : weight * extrapolated + (1 - weight) * historyAverage;
   // Was schon ausgegeben ist, kann nicht mehr weniger werden.
@@ -176,7 +203,9 @@ export function forecastMonth(doc, month, todayIso) {
   const summary = monthSummary(doc, month);
   const projectedExpenses = round(fixed + variableForecast);
   const limit = summary.limit;
+  // Inklusive heute, deshalb + 1.
   const daysRemaining = days - elapsed + 1;
+  // tight = knapp: Prognose erreicht die Warnschwelle, liegt aber noch im Budget.
   const status =
     limit > 0 && projectedExpenses > limit ? 'over' : limit > 0 && projectedExpenses >= limit * doc.settings.warnAt ? 'tight' : 'ok';
 
@@ -201,6 +230,7 @@ export function forecastMonth(doc, month, todayIso) {
   };
 }
 
+// Ab diesem Tag gilt die Hochrechnung ohne Vormonate als aussagekräftig. Das Dashboard zeigt den Wert auch an.
 export const EARLY_DAYS = 7;
 
 // ---------- Verlauf ----------
@@ -211,6 +241,7 @@ export function history(doc, endMonth, count = 6) {
   const months = [];
   for (let i = count - 1; i >= 0; i--) {
     const month = addMonths(endMonth, -i);
+    // Monate ohne Buchungen zählen mit 0, damit das Diagramm keine Lücken hat. In die Durchschnitte fließen sie nicht ein (hasData).
     const t = totals[month] || { income: 0, expenses: 0 };
     const limit = budgetLimit(doc, month);
     months.push({ month, income: t.income, expenses: t.expenses, limit, over: limit > 0 && t.expenses > limit, hasData: Boolean(totals[month]) });
@@ -233,9 +264,11 @@ export function categoryRows(doc, summary) {
   return doc.categories.map((c) => {
     const spent = round(summary.spentByCategory[c.id] || 0);
     const rest = round(c.budget - spent);
+    // !(budget > 0) erwischt 0, aber auch fehlende oder ungültige Werte.
     if (!(c.budget > 0)) return { ...c, spent, rest, pct: 0, state: 'none' };
     const ratio = spent / c.budget;
     const state = rest < 0 ? 'over' : ratio >= doc.settings.warnAt ? 'warn' : 'ok';
+    // pct ist für den Fortschrittsbalken und deshalb bei 100 gedeckelt.
     return { ...c, spent, rest, pct: Math.min(Math.round(ratio * 100), 100), state };
   });
 }
@@ -244,6 +277,8 @@ export function categoryRows(doc, summary) {
 // Nur ein Vorschlag im Dialog "Budgets festlegen"; eigene Kategorien bekommen keinen Wert.
 export const BUDGET_RULE = { wohnen: 0.3, essen: 0.13, 'mobilität': 0.07, freizeit: 0.15, sonstiges: 0.15, sparen: 0.2 };
 
+// Liefert { kategorieId: Vorschlag } für alle Kategorien, deren Name in BUDGET_RULE vorkommt.
+// Der Name wird ohne Leerzeichen am Rand und kleingeschrieben verglichen, Beträge auf ganze Zahlen gerundet.
 export function suggestBudgets(categories, income) {
   return Object.fromEntries(
     categories
@@ -261,6 +296,7 @@ export function legendRows(doc, summary) {
       name: c.name,
       color: c.color,
       spent,
+      // Prozent gerundet. Ohne Ausgaben 0, damit nicht durch 0 geteilt wird.
       pct: summary.expenses ? Math.round((spent / summary.expenses) * 100) : 0,
     };
   });
@@ -268,6 +304,8 @@ export function legendRows(doc, summary) {
 
 // Donut: pro Kategorie ein heller Bogen (Budget) und darüber ein voller Bogen (ausgegeben, max. Budget).
 // Übernommen aus renderVals() im UI-Design-Export.
+// Gedacht für SVG-Kreise: dash ist der Wert für stroke-dasharray (Bogenlänge, Rest des Umfangs), offset für stroke-dashoffset.
+// gap = Lücke zwischen den Kategorien. Ohne Budgets (Summe 0) gibt es keine Bögen.
 export function donutArcs(doc, summary, radius = 88, gap = 3) {
   const circumference = 2 * Math.PI * radius;
   const total = categoryBudgetTotal(doc);
@@ -275,7 +313,9 @@ export function donutArcs(doc, summary, radius = 88, gap = 3) {
   const arcs = [];
   let position = 0;
   for (const c of doc.categories) {
+    // Bogenlänge = Anteil der Kategorie am Gesamtbudget mal Kreisumfang, minus Lücke.
     const budgetLength = (c.budget / total) * circumference - gap;
+    // Ausgaben auf das Budget begrenzt, damit der Bogen nicht in die nächste Kategorie ragt.
     const spentLength = (Math.min(summary.spentByCategory[c.id] || 0, c.budget) / total) * circumference - gap;
     if (budgetLength > 0) arcs.push({ color: c.color, opacity: 0.22, length: budgetLength, offset: -position });
     if (spentLength > 0) arcs.push({ color: c.color, opacity: 1, length: spentLength, offset: -position });
@@ -286,12 +326,16 @@ export function donutArcs(doc, summary, radius = 88, gap = 3) {
 
 // FR-09: Benachrichtigung nur beim ersten Überschreiten im Monat.
 export function shouldNotifyOverBudget(before, after, doc) {
+  // before/after: monthSummary vor und nach der Änderung. overBudgetNotified merkt sich, für welchen Monat schon gemeldet wurde.
   return !before.overBudget && after.overBudget && !doc.overBudgetNotified[after.month];
 }
 
 // ---------- Export ----------
 
+// CSV-Export aller Buchungen: Semikolon als Trennzeichen, Zeilenende \r\n, älteste Buchung zuerst.
+// Ausgaben stehen mit negativem Betrag drin, Einnahmen positiv, immer mit 2 Nachkommastellen.
 export function transactionsToCsv(doc) {
+  // Nachschlagetabelle Kategorie-ID -> Name.
   const names = Object.fromEntries(doc.categories.map((c) => [c.id, c.name]));
   const rows = [['Datum', 'Typ', 'Kategorie', 'Notiz', 'Betrag', 'Automatisch']];
   const sorted = [...doc.transactions].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
@@ -308,11 +352,14 @@ export function transactionsToCsv(doc) {
   return rows.map((row) => row.map(csvCell).join(';')).join('\r\n');
 }
 
+// Eine Zelle CSV-sicher machen: Enthält sie ; oder " oder einen Zeilenumbruch, kommt sie in Anführungszeichen,
+// und Anführungszeichen im Text werden verdoppelt (übliche CSV-Regel).
 function csvCell(value) {
   const text = String(value);
   return /[";\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+// Auf 2 Nachkommastellen (Cent) runden.
 export function round(n) {
   return Math.round(n * 100) / 100;
 }

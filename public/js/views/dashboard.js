@@ -7,8 +7,11 @@ import { icons } from '../icons.js';
 import { pageHead, categoryIcon, categoryMap, displayCategory } from './shared.js';
 import { miniTrendCard } from './insights.js';
 
+// Höchstens so viele Buchungen stehen unter "Letzte Buchungen".
 const RECENT_LIMIT = 5;
 
+// Rendert das Dashboard als HTML-String. Die Daten kommen aus render() in app.js.
+// Aufbau: Seitenkopf, Hero (verfügbar + Status), Kategorie-Kacheln, letzte Buchungen, Mini-Verlauf.
 export function renderDashboard({ doc, month, currentMonth, summary, today }) {
   const cur = doc.settings.currency;
   return `
@@ -25,10 +28,13 @@ export function renderDashboard({ doc, month, currentMonth, summary, today }) {
 
 // ---------- 1 + 2: Hero ----------
 
+// Hero-Karte: verfügbares Geld, Tage übrig, Ausgaben-Balken, Tagesbudget, Einnahmen und Ausgaben.
+// data-hero enthält den Zielwert, von dem aus app.js (countHero) die Zahl hochzählt.
 function hero(doc, summary, month, today, cur) {
   const current = today.slice(0, 7);
   const left = daysLeft(month, today);
   const chip = month < current ? 'Abgeschlossen' : `${left} ${left === 1 ? 'Tag' : 'Tage'} übrig`;
+  // Füllstand des Balkens in Prozent, bei 100 gedeckelt.
   const pct = summary.limit > 0 ? Math.min((summary.expenses / summary.limit) * 100, 100) : 0;
   const forecast = forecastMonth(doc, month, today);
 
@@ -39,6 +45,8 @@ function hero(doc, summary, month, today, cur) {
   }
   info += '.';
 
+  // HTML: Stempel "Überzogen", Label mit Info-Button, Betrag, Statuszeile,
+  // rechts Ausgaben-Balken, Betrag pro Tag (nur mit Prognose und Budget) sowie Einnahmen und Ausgaben.
   return `
     <section class="hero dash-hero" aria-label="Verfügbares Geld">
       ${summary.status === 'over' ? '<span class="stamp" aria-hidden="true">Überzogen</span>' : ''}
@@ -79,6 +87,7 @@ function hero(doc, summary, month, today, cur) {
 
 // Eine einzige Statuszeile statt Prognose-Karte, Hinweis und zweiter Tageszahl.
 function status(doc, summary, forecast, month, current, cur) {
+  // Reihenfolge der Fälle = Priorität: keine Einnahmen, überschritten, kein Budget, Prognose, vergangener Monat.
   const hasSalary = doc.recurring.some((r) => r.kind === 'salary' && r.active);
 
   // Neue User ohne Einnahmen: Hinweis zum Gehalt ist wichtiger als jede Prognose.
@@ -117,11 +126,13 @@ function status(doc, summary, forecast, month, current, cur) {
 
 // ---------- 3: Kategorien als Pastell-Kacheln ----------
 
+// Pro Kategorie eine Kachel mit Prozent, Balken und Rest. Klick öffnet die Kategorie zum Bearbeiten.
 function categories(doc, summary, cur) {
   const rows = categoryRows(doc, summary);
 
   const tiles = rows
     .map((c, i) => {
+      // --i: Position der Kachel, im CSS für die zeitversetzte Wachs-Animation.
       const style = `--c:${displayColor(c.color)};--i:${i}`;
       // Ohne Budget: nur die Ausgaben, kein Prozentwert, kein "drüber"
       if (c.state === 'none') {
@@ -135,6 +146,7 @@ function categories(doc, summary, cur) {
             <span class="cat-rest">ausgegeben <span>· kein Budget</span></span>
           </button>`;
       }
+      // shown: echter Prozentwert (kann über 100 liegen), c.pct ist für die Balkenbreite bei 100 gedeckelt.
       const shown = Math.round((c.spent / c.budget) * 100);
       const text = c.state === 'over' ? `${moneyWithSymbol(-c.rest, cur)} drüber` : `${moneyWithSymbol(c.rest, cur)} übrig`;
       const sticker =
@@ -150,6 +162,7 @@ function categories(doc, summary, cur) {
     })
     .join('');
 
+  // HTML: Überschrift mit Budget-Hinweis, Buttons, dann die Kacheln oder ein Button für die erste Kategorie.
   return `
     <section class="section cats dash-cats" aria-label="Kategorien">
       <div class="section-head">
@@ -182,12 +195,14 @@ function budgetHint(doc, summary, cur) {
 
 // ---------- Letzte Buchungen ----------
 
+// Die neuesten Buchungen des Monats (transactionsOfMonth sortiert neueste zuerst). Klick öffnet die Buchung.
 function recent(doc, month, cur) {
   const cats = categoryMap(doc);
   const list = transactionsOfMonth(doc, month).slice(0, RECENT_LIMIT);
   const rows = list
     .map((t) => {
       const cat = displayCategory(t, cats);
+      // Ohne Notiz wird der Kategoriename als Titel angezeigt.
       const title = t.note || cat.name;
       const sub = t.type === 'income' ? dateLabel(t.date) : `${cat.name} · ${dateLabel(t.date)}`;
       return `
@@ -199,6 +214,7 @@ function recent(doc, month, cur) {
     })
     .join('');
 
+  // HTML: Kopf mit Link zum Finance Manager, dann die Liste oder ein Leertext.
   return `
     <section class="card recent dash-recent" aria-label="Letzte Buchungen">
       <div class="card-head">

@@ -4,6 +4,7 @@ import { esc, monthLabel, initial, displayColor } from '../format.js';
 
 // Seitenkopf: Titel links (Akzentwort als Textmarker in Statusfarbe), rechts optional Monatswahl und die Buttons "Einnahme" / "Ausgabe".
 export function pageHead({ eyebrow, title, accent, month, currentMonth, actions = false }) {
+  // Rechte Seite nur, wenn month bzw. actions übergeben werden (das Profil hat z. B. keine Monatswahl).
   const right = [month ? monthSwitch(month, currentMonth) : '', actions ? actionButtons() : ''].join('');
   return `
     <div class="page-head">
@@ -15,6 +16,7 @@ export function pageHead({ eyebrow, title, accent, month, currentMonth, actions 
     </div>`;
 }
 
+// Monatswahl: zurück, aktueller Monat (Klick springt zu heute, deaktiviert wenn schon aktuell), vor.
 function monthSwitch(month, currentMonth) {
   const isCurrent = month === currentMonth;
   return `
@@ -33,6 +35,7 @@ function actionButtons() {
     <button type="button" class="btn-action expense press" data-action="add-expense">${icons.minus}Ausgabe</button>`;
 }
 
+// Rundes Icon mit dem Anfangsbuchstaben in der Kategoriefarbe.
 export function categoryIcon(label, color, size = 'sm') {
   return `<span class="cat-icon ${size}" style="--c:${displayColor(color)}" aria-hidden="true">${esc(initial(label))}</span>`;
 }
@@ -42,6 +45,7 @@ export function swatch(color) {
   return `<span class="sw" style="--c:${displayColor(color)}" aria-hidden="true"></span>`;
 }
 
+// Kategorien als Nachschlagetabelle { id: Kategorie }, damit Buchungen ihre Kategorie schnell finden.
 export function categoryMap(doc) {
   return Object.fromEntries(doc.categories.map((c) => [c.id, c]));
 }
@@ -52,5 +56,6 @@ export function displayCategory(tx, cats) {
   return cats[tx.categoryId] || NO_CATEGORY;
 }
 
+// Werden oben in displayCategory schon verwendet. Das klappt, weil die Funktion erst nach dem Laden des Moduls aufgerufen wird.
 export const NO_CATEGORY = { name: 'Ohne Kategorie', color: '#FFFFFF' };
 export const INCOME_COLOR = '#B8F2D0';

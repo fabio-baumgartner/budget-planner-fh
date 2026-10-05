@@ -2,30 +2,50 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <!--
+    index.html: die eigentliche App (Single Page Application, SPA).
+    Diese Datei ist nur das Gerüst. Den Inhalt (Dashboard, Finance Manager,
+    Auswertungen, Profil) baut js/app.js zur Laufzeit in <main id="view"> ein.
+    Welche Ansicht gezeigt wird, steht im Hash der URL, z. B. /#finance.
+    Ist man nicht angemeldet, leitet app.js auf /login weiter.
+  -->
+  <!-- viewport-fit=cover: Inhalt darf bis unter Notch/Rundungen am Handy reichen (siehe env(safe-area-inset-*) in styles.css) -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Budget Planner</title>
+  <!-- theme-color: färbt am Handy die Browserleiste im Creme-Ton der App -->
   <meta name="theme-color" content="#FFF8EC">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <!-- Schriften von Google Fonts: preconnect baut die Verbindung schon früh auf, damit die Fonts schneller laden -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap">
+  <!-- Ein gemeinsames Stylesheet für alle drei Seiten (App, Login, Hilfe) -->
   <link rel="stylesheet" href="/css/styles.css">
+  <!-- Einstiegspunkt der App. type="module" erlaubt import/export zwischen den JS-Dateien und lädt das Script erst, wenn das HTML fertig gelesen ist -->
   <script type="module" src="/js/app.js"></script>
 </head>
 <body>
+  <!--
+    Aufbau der Seite: Es gibt zwei Navigationen im HTML (Seitenleiste und Bottom-Nav).
+    Per CSS (Media Queries in styles.css) ist je nach Bildschirmbreite nur eine davon sichtbar.
+  -->
   <!-- Desktop und Tablet: Seitenleiste -->
   <aside class="sidebar" aria-label="Seitenleiste">
     <a class="brand" href="#dashboard" aria-label="Budget Planner, zum Dashboard">
       <span class="brand-logo" aria-hidden="true">B</span>
       <span class="brand-text">Budget Planner</span>
     </a>
+    <!-- Leer im HTML: app.js (renderNav) füllt jedes Element mit data-nav mit den Links zu den Ansichten -->
     <nav class="side-nav" aria-label="Hauptnavigation" data-nav></nav>
+    <!-- Fußbereich der Seitenleiste: Hilfe-Link, Speicherstatus und Profil -->
     <div class="sidebar-foot">
       <a class="nav-btn help-link" href="/hilfe" title="Hilfe &amp; Anleitung">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
         <span>Hilfe &amp; Anleitung</span>
       </a>
+      <!-- Speicherstatus ("Speichert …", "Gespeichert"): Text setzt app.js. aria-live sorgt dafür, dass Screenreader Änderungen vorlesen -->
       <span class="save-state" data-save-state aria-live="polite"></span>
+      <!-- Profil-Kachel: Initiale, Name und E-Mail trägt app.js über die data-user-* Attribute ein -->
       <a class="user-chip" href="#profile" title="Profil">
         <span class="avatar" data-user-initial aria-hidden="true"></span>
         <span class="user-text">
@@ -42,20 +62,28 @@
       <span class="brand-logo" aria-hidden="true">B</span>
       <span class="brand-text">Budget Planner</span>
     </a>
+    <!-- Schnellaktionen + und −. data-icon: app.js setzt das passende SVG-Icon ein. data-action: Klick wird in app.js (onAction) der passenden Funktion zugeordnet -->
     <div class="quick-actions">
       <button type="button" class="icon-btn income press" data-action="add-income" aria-label="Einnahme hinzufügen" data-icon="plus"></button>
       <button type="button" class="icon-btn expense press" data-action="add-expense" aria-label="Ausgabe hinzufügen" data-icon="minus"></button>
     </div>
   </header>
 
+  <!--
+    Hauptbereich: Hier rendert app.js die aktuelle Ansicht hinein (innerHTML).
+    Bis die Daten geladen sind, steht nur der Ladetext da.
+  -->
   <main class="main" id="view">
     <div class="loading">Lade dein Budget …</div>
   </main>
 
   <!-- Handy: Bottom-Navigation -->
+  <!-- Wird wie die Seitenleisten-Navigation von app.js befüllt (gleiches data-nav) -->
   <nav class="bottom-nav" aria-label="Hauptnavigation" data-nav></nav>
 
+  <!-- Container für Dialoge (Modals): ui.js (openModal) hängt hier Hintergrund und Dialog an -->
   <div id="modal-root"></div>
+  <!-- Container für kurze Meldungen (Toasts): ui.js (toast) hängt hier die Meldungen an -->
   <div class="toasts" id="toasts"></div>
 </body>
 </html>

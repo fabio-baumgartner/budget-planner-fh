@@ -1,13 +1,21 @@
+// Profil (#profile): Konto, Monatsbudget und Einstellungen (Währung, Warnschwelle, Übertrag, Export, Abmelden, Account löschen).
 import { categoryBudgetTotal } from '../calc.js';
 import { esc, moneyWithSymbol, memberSince, monthLabel, initial } from '../format.js';
 import { icons } from '../icons.js';
 import { pageHead } from './shared.js';
 
+// Anzeigenamen der Währungen (dieselben Optionen wie im Auswahl-Dialog in app.js).
 const CURRENCY_NAMES = { EUR: 'Euro (€)', CHF: 'Franken (CHF)', USD: 'US-Dollar ($)' };
 
+// Rendert die Ansicht als HTML-String. month ist der gewählte Monat (für das Monatsbudget).
 export function renderProfile({ doc, month, summary }) {
   const cur = doc.settings.currency;
   const isOverride = doc.budgetOverrides[month] != null;
+  // Einstellungen in Gruppen. Jeder Eintrag ist eine von vier Arten:
+  // - toggle: Schalter, der die action auslöst
+  // - href: normaler Link
+  // - action: Button, der die passende Funktion in app.js (actions) aufruft
+  // - weder noch: reine Anzeige (z. B. E-Mail)
   const groups = [
     {
       title: 'Konto',
@@ -38,6 +46,7 @@ export function renderProfile({ doc, month, summary }) {
     },
   ];
 
+  // Aus den Gruppen das HTML der Einstellungsliste bauen.
   const settings = groups
     .map(
       (group) => `
@@ -68,6 +77,7 @@ export function renderProfile({ doc, month, summary }) {
     )
     .join('');
 
+  // HTML: Profilkarte (Initiale, Name, E-Mail, Mitglied seit), Budget-Karte (Klick öffnet den Budget-Dialog), Einstellungen.
   return `
     <div class="page">
       ${pageHead({ title: 'Dein', accent: 'Profil' })}

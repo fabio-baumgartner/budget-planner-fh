@@ -2,8 +2,14 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <!--
+    hilfe.html: statische Hilfe- und Anleitungsseite, erreichbar unter /hilfe.
+    Sie lädt kein JavaScript, der ganze Inhalt steht direkt im HTML.
+    Aussehen kommt aus dem gemeinsamen styles.css (Abschnitt "Hilfe & Anleitung").
+  -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Hilfe &amp; Anleitung · Budget Planner</title>
+  <!-- description: Kurzbeschreibung, die z. B. Suchmaschinen anzeigen -->
   <meta name="description" content="Anleitung zum Budget Planner: erste Schritte, alle Funktionen, wie gerechnet wird und häufige Fragen.">
   <meta name="theme-color" content="#FFF8EC">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -13,6 +19,7 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="help-page">
+  <!-- Kopfzeile: bleibt beim Scrollen oben kleben (position: sticky), mit Logo, Badge und Button zurück zur App -->
   <header class="help-header">
     <div class="help-header-inner">
       <a class="brand" href="/" aria-label="Budget Planner, zur App">
@@ -24,7 +31,12 @@
     </div>
   </header>
 
+  <!-- Zweispaltiges Layout (CSS Grid): links das Inhaltsverzeichnis, rechts der Text. Am Handy untereinander -->
   <div class="help-layout">
+    <!--
+      Inhaltsverzeichnis. Jeder Link springt per Anker (#id) zur passenden <section> weiter unten.
+      <details>/<summary> macht es am Handy auf- und zuklappbar, ganz ohne JavaScript.
+    -->
     <nav class="help-toc" aria-label="Inhalt">
       <details open>
         <summary>Inhalt</summary>
@@ -46,6 +58,7 @@
       </details>
     </nav>
 
+    <!-- Hauptinhalt: eine <section> pro Kapitel, die id passt jeweils zum Link im Inhaltsverzeichnis -->
     <main class="help-content">
       <!-- Überblick -->
       <section id="ueberblick" class="help-hero">
@@ -56,6 +69,7 @@
           Du trägst Einnahmen und Ausgaben ein, teilst sie in Kategorien auf und bekommst eine Warnung,
           bevor dein Budget knapp wird. Gehalt und Fixkosten wie die Miete bucht die App jeden Monat automatisch.
         </p>
+        <!-- Drei Feature-Kacheln mit Icon (inline SVG) -->
         <div class="help-features">
           <div class="help-feature">
             <span class="help-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
@@ -79,6 +93,7 @@
       <section id="erste-schritte" class="help-section">
         <h2>Erste Schritte</h2>
         <p>In fünf Minuten ist dein Budget eingerichtet:</p>
+        <!-- Nummerierte Schritte: die runden Nummern erzeugt das CSS (counter in .help-steps), nicht das HTML -->
         <ol class="help-steps">
           <li>
             <strong>Account anlegen.</strong>
@@ -115,6 +130,7 @@
         <h2>Dashboard</h2>
         <p>Das Dashboard ist deine Startseite und beantwortet drei Fragen: <strong>Wie viel habe ich noch? Komme ich durch den Monat? Wofür geht mein Geld weg?</strong>
           Oben rechts wählst du den Monat: mit den Pfeilen vor und zurück, ein Klick auf den Monatsnamen bringt dich zurück zum aktuellen Monat.</p>
+        <!-- Begriffsliste: <dl> (description list) mit <dt> = Begriff und <dd> = Erklärung -->
         <dl class="help-list">
           <dt>Noch verfügbar</dt>
           <dd>Die große farbige Karte zeigt, wie viel Geld dir in diesem Monat noch bleibt. Ihre Farbe zeigt den Status:
@@ -288,6 +304,7 @@
       <!-- FAQ -->
       <section id="faq" class="help-section">
         <h2>Häufige Fragen</h2>
+        <!-- Jede Frage ist ein <details>-Element: Klick auf <summary> klappt die Antwort auf. Das + bzw. − Zeichen kommt aus dem CSS -->
         <div class="help-faq">
           <details>
             <summary>Warum ist die App auf einmal rot?</summary>
@@ -347,6 +364,7 @@
         </ul>
       </section>
 
+      <!-- Seitenende: zurück zur App oder nach oben springen -->
       <div class="help-end">
         <a class="btn-action expense" href="/">Zur App</a>
         <a class="card-link" href="#ueberblick">Nach oben</a>

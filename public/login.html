@@ -2,6 +2,12 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <!--
+    login.html: Anmelden und Registrieren in einer Seite.
+    Das Umschalten zwischen den beiden Modi und das Absenden an die API
+    übernimmt js/auth.js. Nach erfolgreicher Anmeldung geht es weiter zur App (/).
+    Kopfbereich (Fonts, Stylesheet, theme-color) ist gleich aufgebaut wie in index.html.
+  -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Anmelden · Budget Planner</title>
   <meta name="theme-color" content="#FFF8EC">
@@ -10,27 +16,37 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap">
   <link rel="stylesheet" href="/css/styles.css">
+  <!-- Nur auth.js wird geladen, nicht die ganze App (app.js) -->
   <script type="module" src="/js/auth.js"></script>
 </head>
 <body>
+  <!-- auth-page zentriert die Karte auf dem Bildschirm, auth-card ist die weiße Box mit dem Formular -->
   <main class="auth-page">
     <div class="auth-card">
+      <!-- Logo und Name -->
       <div class="brand">
         <div class="brand-logo">B</div>
         <span class="brand-text">Budget Planner</span>
       </div>
 
+      <!-- Überschrift und Untertitel: auth.js tauscht die Texte je nach Modus aus (Anmelden oder Registrieren) -->
       <div class="auth-intro">
         <h1 id="auth-title">Willkommen <span>zurück</span></h1>
         <p id="auth-sub">Melde dich an, um dein Budget zu sehen.</p>
       </div>
 
+      <!-- Umschalter Anmelden / Registrieren. Das Attribut data-mode sagt auth.js, welcher Modus gewählt wurde -->
       <div class="segmented" role="tablist">
         <button type="button" class="active" data-mode="login" role="tab" aria-selected="true">Anmelden</button>
         <button type="button" data-mode="register" role="tab" aria-selected="false">Registrieren</button>
       </div>
 
+      <!--
+        Formular. novalidate schaltet die Standard-Fehlermeldungen des Browsers aus,
+        Fehler werden stattdessen im Feld #auth-error angezeigt.
+      -->
       <form class="auth-form" id="auth-form" novalidate>
+        <!-- Namensfeld ist versteckt (hidden) und wird nur beim Registrieren eingeblendet -->
         <div class="field" id="name-field" hidden>
           <label class="field-label" for="name">Name</label>
           <input class="input" id="name" name="name" autocomplete="name" maxlength="60" placeholder="z. B. Fabio">
@@ -43,10 +59,12 @@
           <label class="field-label" for="password">Passwort</label>
           <input class="input" id="password" name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Mindestens 8 Zeichen">
         </div>
+        <!-- Fehlermeldung, zunächst versteckt. role="alert" lässt Screenreader sie sofort vorlesen -->
         <p class="form-error" id="auth-error" role="alert" hidden></p>
         <button class="btn-primary" type="submit" id="auth-submit">Anmelden</button>
       </form>
 
+      <!-- Link zur Hilfeseite (auch ohne Anmeldung erreichbar) -->
       <p class="auth-foot"><a class="card-link" href="/hilfe">Was kann der Budget Planner? Zur Anleitung</a></p>    </div>
   </main>
 </body>

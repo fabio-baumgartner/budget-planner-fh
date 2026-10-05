@@ -4,8 +4,10 @@ import { esc, moneyWithSymbol, monthLabel, monthShort, dateLabel } from '../form
 
 // ---------- Mini-Verlauf fürs Dashboard: nur Balken, keine Achse, keine Kennzahlen ----------
 
+// Kleine Balken (Einnahmen und Ausgaben) je Monat, relativ zum höchsten Wert. Klick wählt den Monat.
 export function miniTrendCard(doc, month, cur) {
   const h = history(doc, month, 6);
+  // Höchster Wert = 100 % Höhe. Mindestens 1, damit nie durch 0 geteilt wird.
   const peak = Math.max(1, ...h.months.flatMap((m) => [m.income, m.expenses]));
   const pct = (v) => ((v / peak) * 100).toFixed(1);
 
@@ -24,6 +26,7 @@ export function miniTrendCard(doc, month, cur) {
     })
     .join('');
 
+  // HTML: Kopf mit Link zu den Auswertungen, Legende, Balken.
   return `
     <section class="card trend-mini dash-trend" aria-label="Letzte 6 Monate">
       <div class="card-head">
@@ -37,33 +40,40 @@ export function miniTrendCard(doc, month, cur) {
 
 // ---------- Prognose Monatsende ----------
 
+// Beschriftung und Symbol je Prognose-Status (ok / tight / over aus forecastMonth in calc.js).
 const FORECAST_STATUS = {
   ok: { label: 'Im Plan', icon: '✓' },
   tight: { label: 'Knapp', icon: '!' },
   over: { label: 'Über Budget', icon: '!' },
 };
 
+// Prognose-Karte: erwartete Ausgaben bis Monatsende, Balken (bisher, Prognose, Limit), Erklärsatz, Kennzahlen.
+// f ist das Ergebnis von forecastMonth(). In den ersten Tagen ohne Vormonate gibt es die frühe Variante.
 export function forecastCard(f, cur) {
   if (f.early) return earlyForecastCard(f, cur);
   const status = FORECAST_STATUS[f.status];
   const end = dateLabel(f.endDate);
+  // Bisher = fix (automatische und zukünftig datierte Buchungen) + variable Ausgaben bis heute.
   const spentSoFar = f.fixed + f.variableSoFar;
   // Skala mit etwas Luft über dem größeren Wert, damit die Limit-Markierung sichtbar bleibt.
   const scale = Math.max(f.limit, f.projectedExpenses, 1) * 1.08;
   const pct = (v) => Math.min((v / scale) * 100, 100).toFixed(1);
   const days = `${f.daysElapsed} ${f.daysElapsed === 1 ? 'Tag' : 'Tage'}`;
 
+  // Erklärsatz je nach Status. difference = Prognose minus Limit (negativ heißt unter Budget).
   let sentence;
   if (f.limit <= 0) sentence = 'Lege ein Budget fest, um die Prognose damit zu vergleichen.';
   else if (f.status === 'over') sentence = `Bei deinem aktuellen Tempo liegst du am ${end} ca. ${moneyWithSymbol(f.difference, cur)} über dem Budget.`;
   else if (f.status === 'tight') sentence = `Es wird knapp: voraussichtlich nur ${moneyWithSymbol(-f.difference, cur)} Luft bis zum Limit.`;
   else sentence = `Du bleibst voraussichtlich ${moneyWithSymbol(-f.difference, cur)} unter deinem Budget.`;
 
+  // Fußnote: worauf die Hochrechnung beruht.
   const past = f.historyMonths
     ? ` + Ø ${f.historyMonths === 1 ? 'des letzten Monats' : `der letzten ${f.historyMonths} Monate`}`
     : ' (noch keine Vormonate)';
   const basis = `Basis: ${days} dieses Monats${past}. Fixkosten und geplante Buchungen werden nicht hochgerechnet.`;
 
+  // HTML: Kopf mit Status-Sticker, Prognosewert, Balken mit Limit-Markierung, Legende, Satz, Kennzahlen, Fußnote.
   return `
     <section class="card forecast-card" aria-label="Prognose Monatsende">
       <div class="card-head">
@@ -101,6 +111,7 @@ function earlyForecastCard(f, cur) {
   const spentSoFar = f.fixed + f.variableSoFar;
   const scale = Math.max(f.limit, spentSoFar, 1) * 1.08;
   const pct = (v) => Math.min((v / scale) * 100, 100).toFixed(1);
+  // HTML: wie forecastCard, aber nur mit dem bisherigen Stand statt einer Prognose.
   return `
     <section class="card forecast-card" aria-label="Prognose Monatsende">
       <div class="card-head">
@@ -139,15 +150,19 @@ function niceScale(maxValue, ticks = 4) {
   return { step, max: step * Math.ceil(top / step) };
 }
 
+// Kurze Achsenbeschriftung: ab 1000 als "1,5k".
 function compact(value) {
   return value >= 1000 ? `${(value / 1000).toLocaleString('de-AT', { maximumFractionDigits: 1 })}k` : String(value);
 }
 
+// Ausführlicher Verlauf: Balkengruppen je Monat mit Achse, Limit-Linie und Kennzahlen (Durchschnitt, Sparquote).
+// Für Screenreader zusätzlich eine unsichtbare Tabelle mit denselben Zahlen (Klasse sr-only).
 export function trendCard(doc, month, cur) {
   const h = history(doc, month, 6);
   const peak = Math.max(...h.months.flatMap((m) => [m.income, m.expenses, m.limit]));
   const { step, max } = niceScale(peak);
   const pct = (v) => ((v / max) * 100).toFixed(2);
+  // Achsenwerte 0, step, 2 * step, ... bis max (step / 2 als Puffer gegen Rundungsfehler).
   const ticks = [];
   for (let v = 0; v <= max + step / 2; v += step) ticks.push(v);
 
@@ -173,6 +188,7 @@ export function trendCard(doc, month, cur) {
     })
     .join('');
 
+  // Sparquote in Prozent mit eigenem Minuszeichen, "k. A." wenn es keine Einnahmen gab.
   const rate = h.savingsRate === null ? 'k. A.' : `${h.savingsRate < 0 ? '−' : ''}${Math.abs(Math.round(h.savingsRate * 100))} %`;
   const rows = h.months
     .map(
@@ -182,6 +198,7 @@ export function trendCard(doc, month, cur) {
     )
     .join('');
 
+  // HTML: Kopf mit Legende, Diagramm (Achse, Gitterlinien, Balkengruppen), Kennzahlen, sr-only-Tabelle.
   return `
     <section class="card trend-card" aria-label="Verlauf der letzten 6 Monate">
       <div class="card-head">

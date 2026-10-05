@@ -3,27 +3,47 @@
    Animationen (nur drei): Eindrücken beim Klick, wachsende Balken, Zählwerk der Hero-Zahl.
    Statusfarbe ok / knapp / drüber (body[data-status]) wechselt weich über @property. */
 
+/* Aufbau dieser Datei (von oben nach unten):
+   1. Design-Tokens in :root (Farben, Rahmen, Schatten, Schriften als CSS-Variablen)
+   2. Grundstile (body, Formularelemente, Fokus)
+   3. Animation 1 (Eindrücken) und Animation 2 (wachsende Balken), Sticker
+   4. App-Shell (Seitenleiste, Topbar, Bottom-Nav) und Hauptbereich mit Karten und Bausteinen
+   5. Ein Abschnitt pro Ansicht: Dashboard, Finance Manager, Auswertungen, Profil
+   6. Dialoge, Meldungen (Toasts), Login-Seite, Hilfe-Seite
+   7. Responsive: Anpassungen für Tablet und Handy, reduzierte Bewegung
+   Animation 3 (Zählwerk der Hero-Zahl) läuft in JavaScript (app.js, countHero), nicht hier. */
+/* @property meldet --status als echte Farbe an (syntax <color>). Nur dann kann der Browser
+   zwischen zwei Statusfarben weich überblenden (siehe transition im body).
+   Eine normale CSS-Variable würde einfach hart umspringen. */
 @property --status { syntax: '<color>'; inherits: true; initial-value: #B8F2D0; }
 
 :root {
+  /* Design-Tokens: zentrale Werte als CSS-Variablen (Custom Properties), verwendet mit var(--name).
+     Wer hier eine Farbe ändert, ändert sie überall in der App. */
+  /* Grundfarben: Creme-Hintergrund, weiße Flächen, fast schwarze Schrift (ink) und Linien */
   --cream: #FFF8EC;
   --surface: #FFFFFF;
   --ink: #111111;
   --ink-2: #4F4B45;
   --line: rgba(17, 17, 17, .14);
 
+  /* Pastellfarben für Flächen (Karten, Kacheln, Statusfarben) */
   --mint: #B8F2D0;
   --lilac: #D9C8FF;
   --butter: #FFE58F;
   --peach: #FFC2B4;
   --sky: #BDE3FF;
   --stone: #E6DFD3;
+  /* Rot in drei Stufen: Fläche, Linie (z. B. Budget-Limit) und Text (dunkler, damit gut lesbar) */
   --red: #FF5A4E;
   --red-line: #E8382A;
   --red-ink: #B42318;
 
+  /* Aktuelle Statusfarbe der App: Mint (ok). Wird weiter unten über body[data-status] überschrieben */
   --status: var(--mint);
 
+  /* bw = border width (Rahmenbreite), r = radius (Eckenradius), sh = shadow (Schatten).
+     Die Schatten haben keine Unschärfe (0), das ergibt die harten Kanten des Neo-Brutal-Stils */
   --bw: 2.5px;
   --r: 14px;
   --r-lg: 20px;
@@ -31,30 +51,42 @@
   --sh: 5px 5px 0 var(--ink);
   --sh-lg: 8px 8px 0 var(--ink);
 
+  /* Schriften: Fließtext (font), Überschriften und große Zahlen (display), Beträge und Labels (mono).
+     Die weiteren Namen sind Ausweichschriften, falls Google Fonts nicht lädt */
   --font: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
   --mono: 'Space Mono', ui-monospace, monospace;
+  /* Easing-Kurve mit Wert über 1: die Bewegung schießt kurz über das Ziel hinaus und federt zurück */
   --boing: cubic-bezier(.34, 1.56, .64, 1);
 
+  /* Layout-Maße. Die Media Queries ganz unten überschreiben sie für Tablet und Handy */
   --sidebar: 248px;
   --page-pad-x: 40px;
   --page-pad-y: 32px;
   --bottom-nav: 0px;
+  /* Es gibt nur ein helles Design (keinen Dark Mode). Browser-Elemente wie Scrollbalken bleiben dadurch hell */
   color-scheme: light;
 }
 
 /* Statusfarbe für die ganze App (FR-09) */
+/* app.js setzt data-status am body (ok, warn oder over). Weil --status vererbt wird,
+   färben sich alle Elemente mit var(--status) automatisch mit */
 body[data-status="warn"] { --status: var(--butter); }
 body[data-status="over"] { --status: var(--red); }
 
+/* Grundstile. border-box: Rahmen und Innenabstand zählen zur angegebenen Breite dazu, das macht Größen leichter berechenbar */
 *, *::before, *::after { box-sizing: border-box; }
+/* Verhindert, dass mobile Browser die Schrift (z. B. im Querformat) automatisch vergrößern */
 html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
+  /* Zweimal min-height: 100vh als Fallback für ältere Browser, 100dvh (dynamic viewport height)
+     berücksichtigt am Handy die ein- und ausfahrende Adressleiste */
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--cream);
+  /* Punktraster wie auf Notizpapier: ein winziger Kreis-Verlauf, der alle 22px wiederholt wird */
   background-image: radial-gradient(rgba(17, 17, 17, .085) 1.1px, transparent 1.5px);
   background-size: 22px 22px;
   color: var(--ink);
@@ -63,17 +95,22 @@ body {
   line-height: 1.45;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+  /* Wechsel der Statusfarbe wird in 0,6 Sekunden überblendet (nur möglich dank @property oben) */
   transition: --status .6s ease;
 }
 
+/* Formularelemente übernehmen sonst nicht die Schrift der Seite, daher inherit */
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 a { color: inherit; }
+/* Das HTML-Attribut hidden soll immer verstecken, auch wenn eine Klasse z. B. display: flex setzt (deshalb !important) */
 [hidden] { display: none !important; }
+/* Deutlicher Fokusrahmen bei Tastaturbedienung (focus-visible erscheint nicht bei jedem Mausklick) */
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 input:focus { outline: none; }
 ::selection { background: var(--butter); color: var(--ink); }
 
+/* sr-only (screen reader only): unsichtbar, wird aber von Screenreadern vorgelesen, z. B. die Datentabelle zum Diagramm */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -83,6 +120,9 @@ input:focus { outline: none; }
    Animation 1: Eindrücken beim Klick
    ========================================================= */
 
+/* Klickbare Elemente bekommen schwarzen Rahmen und harten Schatten. Beim Hover heben sie sich leicht an,
+   beim Klick (:active) rutschen sie um die Schattenbreite nach rechts unten und der Schatten verschwindet.
+   So wirkt es, als würde man einen echten Knopf eindrücken. .big und die großen Buttons haben einen größeren Schatten */
 .press, .btn, .chip, .btn-action, .btn-primary, .btn-secondary, .btn-danger {
   border: var(--bw) solid var(--ink);
   box-shadow: var(--sh-sm);
@@ -90,6 +130,7 @@ input:focus { outline: none; }
 }
 .press.big, .btn-primary, .btn-secondary, .btn-danger { box-shadow: var(--sh); }
 
+/* Hover-Effekt nur auf Geräten mit Maus. Auf Touchscreens würde :hover nach dem Tippen sonst "hängen bleiben" */
 @media (hover: hover) {
   .press:hover, .btn:hover, .chip:hover, .btn-action:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
   .press.big:hover, .btn-primary:hover:not(:disabled), .btn-secondary:hover, .btn-danger:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
@@ -101,8 +142,12 @@ input:focus { outline: none; }
    Animation 2: Balken wachsen mit leichtem Überschwingen
    ========================================================= */
 
+/* Keyframes nur mit "from": der Balken startet bei Breite (x) bzw. Höhe (y) 0 und wächst auf seine normale Größe.
+   Die Klasse .grow setzt app.js auf den Hauptbereich, wenn animiert werden soll. .gx/.gy stehen an den Balken */
 @keyframes grow-x { from { transform: scaleX(0); } }
 @keyframes grow-y { from { transform: scaleY(0); } }
+/* --i ist die Nummer des Elements (setzt das JS im style-Attribut). Dadurch starten die Balken nacheinander,
+   jeweils 45ms versetzt. In var(--i, 0) ist 0 der Ersatzwert, falls --i fehlt */
 .grow .gx { animation: grow-x .8s var(--boing) both; animation-delay: calc(var(--i, 0) * 45ms); }
 .grow .gy { animation: grow-y .8s var(--boing) both; animation-delay: calc(var(--i, 0) * 45ms); }
 
@@ -135,6 +180,8 @@ input:focus { outline: none; }
    App-Shell: Seitenleiste (Desktop), Topbar + Bottom-Nav (Handy)
    ========================================================= */
 
+/* Seitenleiste: position: fixed hält sie beim Scrollen am linken Rand.
+   inset: 0 auto 0 0 ist die Kurzform für top 0, right auto, bottom 0, left 0 (volle Höhe, links) */
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
@@ -148,6 +195,7 @@ input:focus { outline: none; }
   border-right: var(--bw) solid var(--ink);
 }
 
+/* Logo plus Name, wird in Seitenleiste, Topbar, Login und Hilfe verwendet */
 .brand {
   display: flex;
   align-items: center;
@@ -176,6 +224,7 @@ input:focus { outline: none; }
 
 .side-nav { display: flex; flex-direction: column; gap: 8px; }
 
+/* Navigationslinks (erzeugt von app.js). .active markiert die gerade offene Ansicht */
 .nav-btn {
   display: flex;
   align-items: center;
@@ -197,6 +246,7 @@ input:focus { outline: none; }
 .nav-btn.active { color: var(--ink); background: var(--lilac); border-color: var(--ink); box-shadow: var(--sh-sm); }
 .nav-btn:active { transform: translate(3px, 3px); box-shadow: none; }
 
+/* margin-top: auto schiebt den Fußbereich in der Flex-Spalte ganz nach unten */
 .sidebar-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
 
 .user-chip {
@@ -212,6 +262,8 @@ input:focus { outline: none; }
 }
 .user-chip:hover { background: var(--butter); }
 .user-text { display: flex; flex-direction: column; min-width: 0; }
+/* Lange Namen und E-Mails werden mit "…" abgeschnitten (overflow, text-overflow, white-space).
+   Das min-width: 0 oben ist nötig, weil Flex-Elemente sonst nicht schmaler als ihr Inhalt werden */
 .user-text strong { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .user-text small { font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -229,12 +281,14 @@ input:focus { outline: none; }
 }
 .avatar.lg { width: 68px; height: 68px; font-size: 28px; border-width: var(--bw); box-shadow: var(--sh-sm); }
 
+/* Speicherstatus in der Seitenleiste, bei einem Fehler rot */
 .save-state { font-family: var(--mono); font-size: 11px; color: var(--ink-2); padding: 0 8px; min-height: 16px; }
 .save-state.error { color: var(--red-ink); font-weight: 700; }
 
 /* Topbar und Bottom-Nav nur am Handy */
 .topbar, .bottom-nav { display: none; }
 
+/* Runde Icon-Buttons: Monatspfeile, Schließen-Knopf im Dialog, + und − in der Topbar */
 .icon-btn {
   width: 38px;
   height: 38px;
@@ -257,14 +311,19 @@ input:focus { outline: none; }
    Hauptbereich
    ========================================================= */
 
+/* margin-left lässt Platz für die fixierte Seitenleiste. Unten zusätzlicher Abstand für die Bottom-Nav
+   am Handy (--bottom-nav ist am Desktop 0px) */
 .main {
   margin-left: var(--sidebar);
   min-height: 100vh;
   min-height: 100dvh;
   padding: var(--page-pad-y) var(--page-pad-x) calc(var(--page-pad-y) + 40px + var(--bottom-nav));
+  /* Container Query: .main wird zum Container mit dem Namen "main". Regeln mit @container main (...)
+     weiter unten reagieren auf die Breite dieses Bereichs, nicht auf die Breite des ganzen Fensters */
   container: main / inline-size;
 }
 
+/* .page umschließt jede Ansicht: höchstens 1480px breit und mittig */
 .page {
   width: 100%;
   max-width: 1480px;
@@ -296,6 +355,7 @@ input:focus { outline: none; }
   margin: 0;
   font-family: var(--display);
   font-weight: 400;
+  /* clamp(min, bevorzugt, max): Schrift wächst mit der Fensterbreite (4vw), bleibt aber zwischen 32 und 48px */
   font-size: clamp(32px, 4vw, 48px);
   line-height: 1.08;
   letter-spacing: -.01em;
@@ -314,6 +374,7 @@ input:focus { outline: none; }
 
 .page-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 
+/* Monatswahl: Pfeil zurück, Monatsname, Pfeil vor. border-radius: 999px ergibt die Pillenform */
 .month-switch {
   display: flex;
   align-items: center;
@@ -339,6 +400,7 @@ input:focus { outline: none; }
 .month-label:not(:disabled):hover { background: var(--butter); }
 .month-label:disabled { cursor: default; color: inherit; }
 
+/* Große Aktionsbuttons "Einnahme" (mint) und "Ausgabe" (schwarz) im Seitenkopf */
 .btn-action {
   display: inline-flex;
   align-items: center;
@@ -355,6 +417,7 @@ input:focus { outline: none; }
 .btn-action.income { background: var(--mint); }
 .btn-action.expense { background: var(--ink); color: var(--cream); }
 
+/* Normale Buttons, .sm ist die kleine Variante */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -373,6 +436,7 @@ input:focus { outline: none; }
 
 /* ---------- Karten ---------- */
 
+/* Grundbaustein: weiße Karte mit Rahmen, runden Ecken und hartem Schatten */
 .card {
   min-width: 0;
   padding: 22px;
@@ -401,6 +465,7 @@ input:focus { outline: none; }
 .section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .section-hint { display: block; margin-top: 4px; font-size: 13px; color: var(--ink-2); }
 
+/* Textlinks im Label-Stil: Monospace, Großbuchstaben, Unterstrich per border-bottom */
 .link, .card-link {
   font-family: var(--mono);
   font-size: 12px;
@@ -413,6 +478,7 @@ input:focus { outline: none; }
 }
 .link:hover, .card-link:hover { background: var(--butter); }
 
+/* Hinweistext, wenn eine Liste leer ist */
 .empty {
   margin: 0;
   padding: 28px 16px;
@@ -424,6 +490,7 @@ input:focus { outline: none; }
 
 .count { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 
+/* Ladetext aus index.html, mittig im Hauptbereich (grid + place-items: center) */
 .loading { min-height: 60vh; display: grid; place-items: center; font-family: var(--mono); color: var(--ink-2); }
 
 /* Kategorie-Icons (Buchungslisten, Dialoge) */
@@ -435,6 +502,7 @@ input:focus { outline: none; }
   place-items: center;
   border: 2px solid var(--ink);
   border-radius: 11px;
+  /* --c ist die Kategoriefarbe, die das JS im style-Attribut setzt. Fehlt sie, gilt --stone */
   background: var(--c, var(--stone));
   font-family: var(--display);
   font-size: 16px;
@@ -452,6 +520,8 @@ input:focus { outline: none; }
   background: var(--c, var(--stone));
 }
 
+/* Geldbeträge: tabular-nums macht alle Ziffern gleich breit, damit Beträge sauber untereinander stehen.
+   .pos = Einnahme mit grünem Hintergrund */
 .amt {
   font-family: var(--mono);
   font-size: 14px;
@@ -466,16 +536,21 @@ input:focus { outline: none; }
    Dashboard
    ========================================================= */
 
+/* Dashboard-Raster: schmal eine Spalte. minmax(0, 1fr) statt 1fr verhindert, dass langer Inhalt die Spalte sprengt */
 .dash { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
 
 @container main (min-width: 900px) {
   .dash { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  /* Ab 900px Breite 12 Spalten: Hero und Kategorien über die volle Breite (1 / -1 = erste bis letzte Linie),
+     darunter Letzte Buchungen (7 Spalten) neben dem Mini-Verlauf (5 Spalten) */
   .dash > .hero, .dash > .cats { grid-column: 1 / -1; }
   .dash > .recent { grid-column: span 7; }
   .dash > .trend-mini { grid-column: span 5; }
 }
 
 /* Hero */
+/* Große Karte "Noch verfügbar". Hintergrund ist var(--status), wechselt also mit dem Budgetstatus die Farbe.
+   position: relative ist der Bezugspunkt für den Stempel (.stamp) */
 .hero {
   position: relative;
   display: grid;
@@ -492,6 +567,7 @@ input:focus { outline: none; }
   .hero { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); padding: 32px 34px; }
 }
 
+/* Stempel "Überzogen" bei überschrittenem Budget. Ragt oben aus der Hero-Karte heraus (top negativ) und ist schräg gedreht */
 .stamp {
   position: absolute;
   top: -18px;
@@ -523,6 +599,7 @@ input:focus { outline: none; }
   text-transform: uppercase;
 }
 
+/* Kleiner runder "i"-Button, zeigt eine Erklärung zur Zahl */
 .info {
   width: 22px;
   height: 22px;
@@ -541,6 +618,7 @@ input:focus { outline: none; }
 
 .hero-amount { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 
+/* Die große Zahl. Das Hochzählen (Animation 3) übernimmt app.js */
 .hero-value {
   font-family: var(--display);
   font-size: clamp(52px, 7.4vw, 104px);
@@ -552,6 +630,7 @@ input:focus { outline: none; }
 
 .hero-currency { font-family: var(--display); font-size: clamp(22px, 2.6vw, 34px); line-height: 1; margin-top: .2em; }
 
+/* Statuszeile unter dem Betrag. Der Punkt (.dot) bekommt je nach Zustand (tight, over, hint, early) eine eigene Farbe */
 .hero-status {
   display: inline-flex;
   align-items: center;
@@ -589,6 +668,7 @@ input:focus { outline: none; }
 .hero-status.hint .dot { background: var(--mint); color: var(--ink); }
 .hero-status.early .dot { background: var(--surface); color: var(--ink); }
 
+/* Rechte Seite der Hero-Karte: Fortschrittsbalken, Betrag pro Tag (.hero-daily), Einnahmen und Ausgaben (.hero-flow) */
 .hero-side { display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; min-width: 0; }
 
 .hero-meter {
@@ -623,6 +703,8 @@ input:focus { outline: none; }
   border: var(--bw) solid var(--ink);
   border-radius: 8px;
 }
+/* ::after legt bei jedem 10 % eine dünne Linie über den Balken (repeating-linear-gradient), so entstehen 10 Segmente.
+   pointer-events: none: die Linien fangen keine Klicks ab */
 .seg-track::after {
   content: '';
   position: absolute;
@@ -630,6 +712,7 @@ input:focus { outline: none; }
   pointer-events: none;
   background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgba(17, 17, 17, .3) calc(10% - 2px) 10%);
 }
+/* Füllung: die Breite in % setzt das JS. transform-origin left: beim Wachsen (Animation 2) startet sie links */
 .seg-fill { display: block; height: 100%; background: var(--ink); transform-origin: left center; }
 
 .hero-daily {
@@ -660,6 +743,7 @@ input:focus { outline: none; }
 .hero-flow strong { font-family: var(--mono); font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Kategorien als Pastell-Kacheln */
+/* 2 Spalten, ab 640px Breite 3, ab 1180px alle 6 nebeneinander */
 .cat-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @container main (min-width: 640px) { .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @container main (min-width: 1180px) { .cat-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
@@ -690,6 +774,7 @@ input:focus { outline: none; }
   border-radius: 99px;
 }
 .cat-fill { display: block; height: 100%; background: var(--ink); border-radius: 99px; transform-origin: left center; }
+/* Zustände: .over = Budget überschritten (roter Balken), .none = Kategorie ohne Budget (gestrichelter Balken) */
 .cat-tile.over .cat-fill { background: var(--red); }
 
 .cat-rest { font-family: var(--mono); font-size: 11.5px; line-height: 1.35; }
@@ -699,6 +784,7 @@ input:focus { outline: none; }
 .cat-tile.none .cat-track { border-style: dashed; }
 .dash-cats .section-hint { max-width: 640px; }
 
+/* Gestrichelter Platzhalter-Button "Erste Kategorie anlegen" */
 .empty-add {
   display: flex;
   align-items: center;
@@ -714,6 +800,8 @@ input:focus { outline: none; }
 
 /* Letzte Buchungen */
 .recent { display: flex; flex-direction: column; gap: 8px; }
+/* Negativer Rand: die Liste wird links und rechts 10px breiter. Mit dem Innenabstand der Zeilen bleibt der Text bündig,
+   der Hover-Hintergrund reicht aber etwas weiter hinaus */
 .recent-list { display: flex; flex-direction: column; margin: 0 -10px; }
 
 .recent-row {
@@ -741,6 +829,7 @@ input:focus { outline: none; }
 .chart-key i { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 3px; }
 .k-income { background: var(--mint); }
 .k-expense, .k-spent { background: var(--ink); }
+/* Schraffur für die Prognose: schräge Streifen (repeating-linear-gradient) über Lila */
 .k-projected { background: repeating-linear-gradient(135deg, var(--ink) 0 1.5px, transparent 1.5px 4px), var(--lilac); }
 .chart-key i.k-limit { width: 16px; height: 0; border: 0; border-radius: 0; border-top: 3px dashed var(--red-line); }
 .chart-key i.k-marker { width: 6px; height: 14px; background: var(--red); border-radius: 2px; }
@@ -769,6 +858,8 @@ input:focus { outline: none; }
   background: transparent;
 }
 
+/* Pro Monat ein Paar aus zwei Balken (Einnahmen .in, Ausgaben .out), unten an der Grundlinie ausgerichtet.
+   position: relative ist der Bezugspunkt für das rote "!" (.flag) */
 .mini-month .pair {
   position: relative;
   flex: 1;
@@ -797,6 +888,7 @@ input:focus { outline: none; }
 .mini-month small { font-family: var(--mono); font-size: 11px; padding: 2px 6px; border-radius: 6px; }
 .mini-month.is-selected small { background: var(--ink); color: var(--cream); }
 
+/* Runder roter Marker mit "!" für Monate über Budget (Mini-Verlauf, großes Diagramm, Legende) */
 .chart-over {
   display: inline-grid;
   place-items: center;
@@ -817,6 +909,7 @@ input:focus { outline: none; }
    Finance Manager
    ========================================================= */
 
+/* Kennzahlen-Kacheln: 2 Spalten, ab 760px Breite 4 nebeneinander. Hintergrund --c setzt das JS pro Kachel */
 .kpis { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @container main (min-width: 760px) { .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
@@ -842,9 +935,11 @@ input:focus { outline: none; }
 }
 .kpi .kpi-sub { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
 
+/* Ab 1000px zwei Spalten: links die Buchungsliste, rechts Gehalt & Fixkosten (320 bis 390px breit) */
 .finance { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @container main (min-width: 1000px) { .finance { grid-template-columns: minmax(0, 1fr) minmax(320px, 390px); } }
 
+/* Chips: Filter (Alle, Ausgaben, Einnahmen) und Kategorie-Auswahl im Buchungsdialog (.pick, in Kategoriefarbe) */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   display: inline-flex;
@@ -870,6 +965,8 @@ input:focus { outline: none; }
   box-shadow: var(--sh);
 }
 
+/* Buchungstabelle als CSS Grid: Kopfzeile und Zeilen nutzen dieselben 4 Spalten
+   (Titel, Kategorie, Datum, Betrag), deshalb stehen sie genau untereinander */
 .tx-head, .tx-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(110px, 170px) 90px 130px;
@@ -896,6 +993,7 @@ input:focus { outline: none; }
 .tx-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .tx-title-text { display: flex; flex-direction: column; min-width: 0; }
 .tx-title-text > span:first-child { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* .tx-sub (Kategorie und Datum unter dem Titel) ist versteckt und erscheint nur in der schmalen Listenansicht unten */
 .tx-sub { display: none; font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-cat { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; }
 .tx-cat span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -937,6 +1035,7 @@ input:focus { outline: none; }
   font-size: 14px;
 }
 .rec-totals div { display: flex; justify-content: space-between; gap: 12px; }
+/* Letzte Summenzeile (was nach den Fixkosten übrig bleibt) mit gestrichelter Trennlinie */
 .rec-totals div:last-child { margin-top: 2px; padding-top: 8px; border-top: 2px dashed var(--ink); font-weight: 700; }
 .rec-totals strong { font-family: var(--mono); white-space: nowrap; }
 
@@ -944,6 +1043,7 @@ input:focus { outline: none; }
    Auswertungen
    ========================================================= */
 
+/* Eine Spalte. Ab 1000px und wenn es eine Prognose gibt (.has-forecast) zwei Spalten, .full geht über die ganze Breite */
 .ana { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
 @container main (min-width: 1000px) {
   .ana.has-forecast { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); align-items: start; }
@@ -955,6 +1055,8 @@ input:focus { outline: none; }
 .forecast-value { font-family: var(--display); font-size: 40px; line-height: 1.05; }
 .forecast-caption { font-size: 14px; color: var(--ink-2); }
 
+/* Prognose-Balken aus übereinander liegenden, absolut positionierten Schichten:
+   Spur (.meter-track), Prognose (schraffiert), bisher ausgegeben (schwarz) und Limit-Markierung (rot) */
 .meter { position: relative; height: 26px; margin: 6px 0; }
 .meter-track {
   position: absolute;
@@ -967,6 +1069,7 @@ input:focus { outline: none; }
 .meter-projected, .meter-spent { position: absolute; left: 0; top: 0; bottom: 0; transform-origin: left center; }
 .meter-projected { background: repeating-linear-gradient(135deg, var(--ink) 0 2.5px, transparent 2.5px 8px), var(--lilac); border-right: 2px solid var(--ink); }
 .meter-spent { background: var(--ink); }
+/* Rote Limit-Markierung: die Position (left in %) setzt das JS, margin-left: -4px zentriert den 8px breiten Strich darauf */
 .meter-limit {
   position: absolute;
   top: -8px;
@@ -1000,6 +1103,8 @@ input:focus { outline: none; }
 
 /* Verlauf als Balkendiagramm (HTML, damit die Schrift in jeder Breite lesbar bleibt) */
 .chart { --plot-h: 220px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+/* --plot-h (oben in .chart) ist die Höhe der Zeichenfläche. Achse, Rasterlinien und Balken richten sich danach.
+   Achsenwerte und Rasterlinien sind absolut positioniert, ihre Höhe (bottom in %) setzt das JS */
 .chart-axis { position: relative; height: var(--plot-h); min-width: 30px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); text-align: right; }
 .chart-axis span { position: absolute; right: 0; transform: translateY(50%); white-space: nowrap; }
 .chart-plot { position: relative; }
@@ -1033,6 +1138,7 @@ input:focus { outline: none; }
 .bar { display: block; width: 100%; border: 2px solid var(--ink); border-bottom: 0; border-radius: 6px 6px 0 0; transform-origin: center bottom; }
 .bar.income { background: var(--mint); }
 .bar.expense { background: var(--ink); }
+/* Gestrichelte rote Linie = Budget-Limit des Monats, Höhe (bottom in %) setzt das JS */
 .chart-limit { position: absolute; left: -6px; right: -6px; border-top: 3px dashed var(--red-line); }
 .bar-slot .chart-over { position: absolute; left: 50%; margin-left: -9px; }
 
@@ -1042,6 +1148,8 @@ input:focus { outline: none; }
 
 /* Kategorien im Detail */
 .table-section { display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+/* Tabelle darf seitlich scrollen, wenn sie zu breit ist. Der negative Rand gleicht den Innenabstand der Karte (22px) aus,
+   damit die Tabelle bis an den Kartenrand reicht */
 .table-scroll { overflow-x: auto; margin: 0 -22px -22px; }
 
 .cat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -1079,6 +1187,7 @@ input:focus { outline: none; }
    Profil
    ========================================================= */
 
+/* Profil: eine Spalte, ab 900px Breite zwei Spalten */
 .profile { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @container main (min-width: 900px) { .profile { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); } }
 .profile-col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
@@ -1088,6 +1197,7 @@ input:focus { outline: none; }
 .profile-card strong { font-family: var(--display); font-weight: 400; font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .profile-card small { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Karte "Monatsbudget" in Statusfarbe. .fake-btn sieht nur wie ein Button aus, klickbar ist die ganze Karte */
 .budget-card {
   display: flex;
   justify-content: space-between;
@@ -1104,6 +1214,7 @@ input:focus { outline: none; }
 .budget-card strong { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1.1; }
 .fake-btn { padding: 8px 14px; background: var(--surface); border: 2px solid var(--ink); border-radius: 99px; font-size: 13px; font-weight: 700; white-space: nowrap; }
 
+/* Einstellungsliste: Gruppenüberschriften (.settings-group) und einzelne Zeilen (.setting) */
 .settings-list {
   overflow: hidden;
   background: var(--surface);
@@ -1140,6 +1251,8 @@ input:focus { outline: none; }
   text-align: left;
   text-decoration: none;
 }
+/* :has(+ .settings-group) trifft eine Zeile, auf die direkt eine Gruppenüberschrift folgt.
+   Sie braucht keine eigene Trennlinie, weil die Überschrift schon eine hat */
 .setting:last-child, .setting:has(+ .settings-group) { border-bottom: none; }
 button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .setting.danger { color: var(--red-ink); font-weight: 700; }
@@ -1160,7 +1273,9 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
   border-radius: 99px;
   transition: background-color .2s;
 }
+/* appearance: none entfernt das Standard-Aussehen der Checkbox, damit sie wie ein Schalter gestaltet werden kann */
 .toggle input { appearance: none; -webkit-appearance: none; cursor: pointer; }
+/* Der runde Knopf ist ein ::after-Pseudo-Element. Eingeschaltet (.on bzw. :checked) rutscht er 22px nach rechts */
 .switch::after, .toggle input::after {
   content: '';
   position: absolute;
@@ -1181,8 +1296,11 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
    Dialoge
    ========================================================= */
 
+/* Dialoge werden von ui.js in #modal-root eingefügt. Zuerst der halbdurchsichtige Hintergrund (z-index 20) */
 .modal-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(17, 17, 17, .42); animation: fade .15s ease-out; }
 
+/* Der Dialog selbst (z-index 21, also über dem Hintergrund). left/top 50% plus translate(-50%, -50%) zentriert ihn genau.
+   Am Handy wird er zum Bottom-Sheet (siehe Responsive unten) */
 .modal {
   position: fixed;
   left: 50%;
@@ -1192,6 +1310,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
   width: min(500px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
+  /* Scrollen im Dialog soll nicht die Seite dahinter mitscrollen */
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -1211,6 +1330,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .modal-text { margin: 0; line-height: 1.5; }
 .modal-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
 
+/* Umschalter mit zwei Hälften: Ausgabe/Einnahme im Buchungsdialog, Anmelden/Registrieren im Login */
 .segmented {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1224,6 +1344,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .segmented button.active { background: var(--ink); color: var(--cream); }
 .segmented button[data-type="income"].active { background: var(--mint); color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
 
+/* Großes Betragsfeld im Buchungsdialog: gestrichelte Linie, beim Tippen (:focus-within) durchgezogen */
 .amount-field {
   display: flex;
   align-items: baseline;
@@ -1247,6 +1368,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 }
 .amount-field input::placeholder { color: rgba(17, 17, 17, .22); }
 
+/* Formularfeld: Label über dem Eingabefeld */
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field-label { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
@@ -1262,6 +1384,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 }
 .input:focus { background: #FFFDF5; box-shadow: var(--sh-sm); }
 
+/* Eingabefeld und kurzer Text (z. B. Währung) in einem gemeinsamen Rahmen */
 .input-group {
   display: flex;
   align-items: center;
@@ -1288,6 +1411,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .row { display: flex; align-items: center; gap: 14px; }
 .row > .input { flex: 1; min-width: 0; }
 
+/* Farbauswahl für Kategorien. Die gewählte Farbe (.active) bekommt per ::after ein Häkchen */
 .swatches { display: flex; flex-wrap: wrap; gap: 10px; }
 .swatch {
   width: 38px;
@@ -1315,6 +1439,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 
 .modal-actions { display: flex; flex-direction: column; gap: 10px; }
 
+/* Große Buttons über die volle Breite: Hauptaktion (in Statusfarbe), Gefahr (rot), Nebenaktion (weiß) */
 .btn-primary, .btn-danger, .btn-secondary {
   width: 100%;
   min-height: 54px;
@@ -1344,6 +1469,8 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
    Meldungen
    ========================================================= */
 
+/* Stapel für Toasts unten rechts. pointer-events: none: der leere Bereich blockiert keine Klicks,
+   die Toasts selbst sind wieder anklickbar (auto) */
 .toasts {
   position: fixed;
   right: 24px;
@@ -1375,6 +1502,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .toast.error { background: var(--red); }
 .toast.error .toast-dot { background: var(--surface); }
 
+/* Einblend-Animationen: Dialog-Hintergrund (fade), Dialog (pop), Toasts (slide), Bottom-Sheet am Handy (sheet) */
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop { from { opacity: 0; transform: translate(-50%, -46%); } }
 @keyframes slide { from { opacity: 0; transform: translateY(8px); } }
@@ -1384,6 +1512,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
    Login
    ========================================================= */
 
+/* login.html: Karte mittig im Fenster (grid + place-items: center) */
 .auth-page {
   min-height: 100vh;
   min-height: 100dvh;
@@ -1416,6 +1545,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
    Hilfe & Anleitung (hilfe.html)
    ========================================================= */
 
+/* Kopfzeile klebt beim Scrollen oben (position: sticky). env(safe-area-inset-top) hält Abstand zur Notch am Handy */
 .help-header {
   position: sticky;
   top: 0;
@@ -1438,6 +1568,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .help-badge { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 5px 10px; background: var(--butter); border: 2px solid var(--ink); border-radius: 8px; transform: rotate(-2deg); white-space: nowrap; }
 .help-cta { margin-left: auto; min-height: 42px; }
 
+/* Zwei Spalten: Inhaltsverzeichnis 230px, der Text bekommt den Rest */
 .help-layout {
   max-width: 1200px;
   margin: 0 auto;
@@ -1448,9 +1579,13 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
   align-items: start;
 }
 
+/* Inhaltsverzeichnis bleibt beim Scrollen sichtbar (100px unter dem oberen Rand) */
 .help-toc { position: sticky; top: 100px; }
 .help-toc summary { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: default; list-style: none; margin-bottom: 10px; }
+/* Versteckt das Standard-Dreieck von <summary> (list-style: none reicht in Safari nicht) */
 .help-toc summary::-webkit-details-marker { display: none; }
+/* Nummerierung 01, 02, ... per CSS-Zähler: counter-reset startet den Zähler, jedes li zählt hoch
+   (counter-increment), ::before am Link zeigt ihn zweistellig an (decimal-leading-zero) */
 .help-toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; counter-reset: toc; }
 .help-toc li { counter-increment: toc; }
 .help-toc a {
@@ -1468,10 +1603,12 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .help-toc a:hover { background: var(--surface); border-color: var(--ink); color: var(--ink); }
 
 .help-content { max-width: 780px; min-width: 0; display: flex; flex-direction: column; gap: 52px; font-size: 16px; line-height: 1.65; color: var(--ink); }
+/* Beim Sprung zu einem Anker bleibt oben Platz, damit die klebende Kopfzeile die Überschrift nicht verdeckt */
 .help-content section { scroll-margin-top: 92px; }
 .help-hero { display: flex; flex-direction: column; gap: 10px; }
 .help-lead { margin: 10px 0 0; font-size: 18px; }
 
+/* auto-fit + minmax: so viele Spalten, wie mit mindestens 210px Platz haben. Schmal rutschen sie automatisch untereinander */
 .help-features { margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 16px; }
 .help-feature {
   display: flex;
@@ -1499,6 +1636,8 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .help-section a:hover { background: var(--butter); }
 .help-section code { font-family: var(--mono); font-size: 14px; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 6px; padding: 1px 6px; }
 
+/* Schritte: Standard-Nummern aus, stattdessen runde Nummern per Zähler und ::before.
+   !important überschreibt die allgemeine Regel für .help-section ol */
 .help-steps { list-style: none; padding-left: 0 !important; counter-reset: step; gap: 14px !important; }
 .help-steps li {
   position: relative;
@@ -1581,6 +1720,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 .help-faq details[open] { box-shadow: var(--sh-sm); }
 .help-faq summary { position: relative; padding: 14px 28px 14px 0; font-weight: 700; cursor: pointer; list-style: none; }
 .help-faq summary::-webkit-details-marker { display: none; }
+/* Plus bei geschlossener Frage, Minus bei offener (details[open]) */
 .help-faq summary::after { content: '+'; position: absolute; right: 0; top: 10px; font-family: var(--display); font-size: 20px; }
 .help-faq details[open] summary::after { content: '−'; }
 .help-faq details p { margin: 0 0 14px; }
@@ -1589,6 +1729,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 
 .help-end { display: flex; align-items: center; gap: 18px; padding-top: 24px; border-top: var(--bw) solid var(--ink); }
 
+/* Hilfe-Seite unter 900px: eine Spalte, das Inhaltsverzeichnis wird zur aufklappbaren Box mit zwei Spalten */
 @media (max-width: 900px) {
   .help-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 20px 16px 64px; }
   .help-toc { position: static; padding: 12px 14px; background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r); }
@@ -1600,6 +1741,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
   .help-header-inner { padding: 0 16px; gap: 10px; }
 }
 
+/* Sehr schmale Handys: Badge ausblenden, Schriften und Abstände kleiner */
 @media (max-width: 520px) {
   .help-badge { display: none; }
   .help-section h2 { font-size: 22px; }
@@ -1614,9 +1756,11 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 
 /* Tablet: Seitenleiste nur mit Icons */
 @media (max-width: 1099px) {
+  /* Variablen überschreiben: schmalere Seitenleiste. .main rückt automatisch mit, weil es margin-left: var(--sidebar) nutzt */
   :root { --sidebar: 88px; --page-pad-x: 28px; }
   .sidebar { align-items: center; padding: 20px 12px; }
   .sidebar .brand { padding: 0; }
+  /* Texte ausblenden, nur die Icons bleiben sichtbar */
   .sidebar .brand-text, .sidebar .nav-btn > span, .sidebar .user-text, .sidebar .save-state { display: none; }
   .side-nav { width: 100%; }
   .side-nav .nav-btn, .sidebar-foot .help-link { justify-content: center; padding: 12px; }
@@ -1627,10 +1771,13 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 
 /* Handy: Topbar oben, Navigation unten, Dialoge als Bottom-Sheet */
 @media (max-width: 767px) {
+  /* Seitenleiste fällt weg (0px). --bottom-nav reserviert unten Platz für die Navigation plus den Abstand
+     zum Home-Balken am iPhone (safe-area-inset-bottom) */
   :root { --sidebar: 0px; --page-pad-x: 16px; --page-pad-y: 20px; --bottom-nav: calc(72px + env(safe-area-inset-bottom, 0px)); }
 
   .sidebar, .page-actions .btn-action { display: none; }
 
+  /* Topbar und Bottom-Nav waren oben mit display: none versteckt und werden hier eingeblendet */
   .topbar {
     position: sticky;
     top: 0;
@@ -1681,6 +1828,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
 
   .hero { padding: 24px 18px 20px; box-shadow: var(--sh); }
   .stamp { right: 14px; font-size: 15px; }
+  /* Hat die Hero-Karte einen Stempel, braucht sie oben mehr Platz */
   .hero:has(.stamp) { padding-top: 40px; }
   .card { padding: 18px; }
   .table-scroll { margin: 0 -18px -18px; }
@@ -1689,6 +1837,7 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
   .cat-pct { font-size: 32px; }
   .setting { padding: 15px 18px; }
 
+  /* Dialog als Bottom-Sheet: unten am Rand, volle Breite, nur oben abgerundet, fährt von unten herein (Animation sheet) */
   .modal {
     left: 0;
     right: 0;
@@ -1704,10 +1853,12 @@ button.setting:hover, a.setting:hover { background: #FFFBF2; }
     animation: sheet .22s ease-out;
   }
 
+  /* Toasts über der Bottom-Nav und über die ganze Breite */
   .toasts { bottom: calc(var(--bottom-nav) + 12px); left: 16px; right: 16px; align-items: stretch; }
   .toast { max-width: none; }
 }
 
+/* Barrierefreiheit: Wer im Betriebssystem "Bewegung reduzieren" eingestellt hat, bekommt keine Animationen und Übergänge */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
