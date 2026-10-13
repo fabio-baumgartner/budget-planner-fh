@@ -110,5 +110,3 @@ Der Ordner `api/` muss für Vercel so heißen, deshalb gibt es keinen eigenen Or
 scripts/        lokaler Dev-Server
 tests/          Unit-Tests (node:test)
 ```
-
-test
