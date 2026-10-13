@@ -620,7 +620,7 @@ input:focus { outline: none; }
 
 /* Die große Zahl. Das Hochzählen (Animation 3) übernimmt app.js */
 .hero-value {
-  font-family: var(--display);
+  font-family: var(--font);
   font-size: clamp(52px, 7.4vw, 104px);
   line-height: .95;
   letter-spacing: -.02em;
