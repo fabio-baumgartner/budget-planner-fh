@@ -304,7 +304,7 @@ input:focus { outline: none; }
 
 .quick-actions { display: flex; gap: 10px; }
 .quick-actions .icon-btn { width: 40px; height: 40px; }
-.quick-actions .income { background: var(--mint); }
+.quick-actions .income { background: var(--sky); }
 .quick-actions .expense { background: var(--ink); color: var(--cream); }
 
 /* =========================================================
@@ -414,7 +414,7 @@ input:focus { outline: none; }
   text-decoration: none;
 }
 .btn-action svg { width: 16px; height: 16px; }
-.btn-action.income { background: var(--mint); }
+.btn-action.income { background: var(--sky); }
 .btn-action.expense { background: var(--ink); color: var(--cream); }
 
 /* Normale Buttons, .sm ist die kleine Variante */
