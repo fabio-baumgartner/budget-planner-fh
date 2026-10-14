@@ -21,7 +21,7 @@
   /* Design-Tokens: zentrale Werte als CSS-Variablen (Custom Properties), verwendet mit var(--name).
      Wer hier eine Farbe ändert, ändert sie überall in der App. */
   /* Grundfarben: Creme-Hintergrund, weiße Flächen, fast schwarze Schrift (ink) und Linien */
-  --cream: #FFF8EC;
+  --cream: #fff82FC;
   --surface: #FFFFFF;
   --ink: #111111;
   --ink-2: #4F4B45;
